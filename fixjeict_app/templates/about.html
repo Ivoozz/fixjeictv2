@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Over Ons - FixJeICT{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <h1 class="page-title">Over FixJeICT</h1>
+        <p class="page-subtitle">Uw betrouwbare partner sinds 2020</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="about-content">
+            <div class="about-text">
+                <h2>Onze Missie</h2>
+                <p>Bij FixJeICT geloven we dat goede IT support toegankelijk moet zijn voor iedereen. Onze missie is om bedrijven te helpen met hun IT-uitdagingen op een manier die duidelijk, efficiënt en betaalbaar is.</p>
+
+                <h2>Onze Waarden</h2>
+                <ul class="values-list">
+                    <li><strong>Transparantie</strong> - Geen verborgen kosten, duidelijke communicatie</li>
+                    <li><strong>Betrouwbaarheid</strong> - We doen wat we beloven</li>
+                    <li><strong>Klantgericht</strong> - Uw tevredenheid is onze prioriteit</li>
+                    <li><strong>Expertise</strong> - Continu bijblijven met de nieuwste technologie</li>
+                </ul>
+            </div>
+            <div class="about-stats">
+                <div class="about-stat">
+                    <div class="stat-number">4+</div>
+                    <div class="stat-label">Jaar Ervaring</div>
+                </div>
+                <div class="about-stat">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Tickets Opgelost</div>
+                </div>
+                <div class="about-stat">
+                    <div class="stat-number">98%</div>
+                    <div class="stat-label">Klanttevredenheid</div>
+                </div>
+                <div class="about-stat">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Support Beschikbaar</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section-light">
+    <div class="container">
+        <h2 class="section-title">Ons Team</h2>
+        <div class="team-grid">
+            <div class="team-card">
+                <div class="team-avatar">👨‍💻</div>
+                <h3>Jan de Vries</h3>
+                <p class="team-role">Hoofd Engineer</p>
+                <p class="team-bio">Meer dan 15 jaar ervaring in systeembeheer en netwerken.</p>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar">👩‍💻</div>
+                <h3>Maria Jansen</h3>
+                <p class="team-role">Cloud Specialist</p>
+                <p class="team-bio">Expert in cloud migraties en SaaS implementaties.</p>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar">👨‍💻</div>
+                <h3>Peter Bakker</h3>
+                <p class="team-role">Security Expert</p>
+                <p class="team-bio">Specialist in cybersecurity en data bescherming.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section cta-section">
+    <div class="container">
+        <div class="cta-box">
+            <h2>Klaar om samen te werken?</h2>
+            <p>Neem contact op en ontdek hoe wij u kunnen helpen.</p>
+            <a href="{{ url_for('contact') }}" class="btn btn-primary btn-lg">Start Nu</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

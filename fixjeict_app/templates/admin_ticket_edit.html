@@ -1,0 +1,81 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Bewerk Ticket #{{ ticket.id }}{% endblock %}
+
+{% block content %}
+<div class="admin-detail">
+    <div class="admin-detail-header">
+        <a href="{{ url_for('admin_ticket_detail', id=ticket.id) }}" class="btn-link">← Terug naar ticket</a>
+    </div>
+
+    <div class="detail-card">
+        <form method="POST" class="admin-form">
+            <div class="form-group">
+                <label for="title">Onderwerp</label>
+                <input type="text" id="title" name="title" value="{{ ticket.title }}" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="Open" {% if ticket.status == 'Open' %}selected{% endif %}>Open</option>
+                        <option value="In behandeling" {% if ticket.status == 'In behandeling' %}selected{% endif %}>In behandeling</option>
+                        <option value="Wacht op klant" {% if ticket.status == 'Wacht op klant' %}selected{% endif %}>Wacht op klant</option>
+                        <option value="Wacht op leverancier (van klant)" {% if ticket.status == 'Wacht op leverancier (van klant)' %}selected{% endif %}>Wacht op leverancier</option>
+                        <option value="Gereed" {% if ticket.status == 'Gereed' %}selected{% endif %}>Gereed</option>
+                        <option value="Afgemeld" {% if ticket.status == 'Afgemeld' %}selected{% endif %}>Afgemeld</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="priority">Prioriteit</label>
+                    <select id="priority" name="priority">
+                        <option value="laag" {% if ticket.priority == 'laag' %}selected{% endif %}>Laag</option>
+                        <option value="normaal" {% if ticket.priority == 'normaal' %}selected{% endif %}>Normaal</option>
+                        <option value="hoog" {% if ticket.priority == 'hoog' %}selected{% endif %}>Hoog</option>
+                        <option value="spoed" {% if ticket.priority == 'spoed' %}selected{% endif %}>Spoed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category_id">Categorie</label>
+                    <select id="category_id" name="category_id">
+                        <option value="">Geen</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if ticket.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fixer_id">Fixer</label>
+                    <select id="fixer_id" name="fixer_id">
+                        <option value="">Niet toegewezen</option>
+                        {% for fixer in fixers %}
+                        <option value="{{ fixer.id }}" {% if ticket.fixer_id == fixer.id %}selected{% endif %}>{{ fixer.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="estimated_hours">Geschatte uren</label>
+                    <input type="number" id="estimated_hours" name="estimated_hours" step="0.25" min="0" value="{{ ticket.estimated_hours or '' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Beschrijving</label>
+                <textarea id="description" name="description" rows="6" required>{{ ticket.description }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin_ticket_detail', id=ticket.id) }}" class="btn btn-secondary">Annuleren</a>
+                <button type="submit" class="btn btn-primary">Opslaan</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

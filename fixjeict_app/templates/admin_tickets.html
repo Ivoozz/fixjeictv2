@@ -1,0 +1,48 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Tickets{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div class="filters">
+        <a href="{{ url_for('admin_tickets') }}" class="btn btn-sm {{ 'btn-primary' if not status_filter else 'btn-secondary' }}">Alle</a>
+        <a href="{{ url_for('admin_tickets', status='Open') }}" class="btn btn-sm {{ 'btn-primary' if status_filter == 'Open' else 'btn-secondary' }}">Open</a>
+        <a href="{{ url_for('admin_tickets', status='In behandeling') }}" class="btn btn-sm {{ 'btn-primary' if status_filter == 'In behandeling' else 'btn-secondary' }}">In behandeling</a>
+        <a href="{{ url_for('admin_tickets', status='Gereed') }}" class="btn btn-sm {{ 'btn-primary' if status_filter == 'Gereed' else 'btn-secondary' }}">Gereed</a>
+    </div>
+</div>
+
+{% if tickets %}
+<div class="list">
+    {% for ticket in tickets %}
+    <div class="list-item">
+        <div class="list-item-main">
+            <div class="list-item-id">#{{ ticket.id }}</div>
+            <div class="list-item-info">
+                <strong>{{ ticket.title }}</strong>
+                <div class="list-item-meta">
+                    <span>{{ ticket.client.name }}</span>
+                    {% if ticket.category %}<span>{{ ticket.category.name }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="list-item-actions">
+            <span class="badge badge-status-{{ ticket.status|replace(' ', '-')|lower }}">{{ ticket.status }}</span>
+            <span class="badge badge-priority-{{ ticket.priority }}">{{ ticket.priority }}</span>
+            <span class="list-item-date">{{ ticket.updated_at.strftime('%d-%m-%Y') }}</span>
+            <div class="list-item-buttons">
+                <a href="{{ url_for('admin_ticket_detail', id=ticket.id) }}" class="btn btn-sm btn-secondary">Bekijk</a>
+                <a href="{{ url_for('admin_ticket_edit', id=ticket.id) }}" class="btn btn-sm btn-secondary">Bewerk</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <h3>Geen tickets gevonden</h3>
+    <p>Er zijn geen tickets met de geselecteerde filters.</p>
+</div>
+{% endif %}
+{% endblock %}

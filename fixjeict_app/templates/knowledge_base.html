@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Kennisbank - FixJeICT{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <h1 class="page-title">Kennisbank</h1>
+        <p class="page-subtitle">Handige tips, handleidingen en antwoorden op veelgestelde vragen</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="kb-search">
+            <input type="text" id="kb-search" placeholder="Zoek in de kennisbank..." onkeyup="filterKB()">
+        </div>
+
+        <div class="kb-content">
+            <div class="kb-sidebar">
+                <h3>Categorieën</h3>
+                <ul class="kb-categories">
+                    <li><a href="#" class="active" data-category="all">Alle artikelen</a></li>
+                    {% for cat in categories %}
+                    <li><a href="#" data-category="{{ cat[0] }}">{{ cat[0] }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="kb-articles" id="kb-articles">
+                {% if posts %}
+                    {% for post in posts %}
+                    <article class="kb-card" data-title="{{ post.title.lower() }}">
+                        <h3>{{ post.title }}</h3>
+                        <p>{{ post.content[:150] }}...</p>
+                        <div class="kb-meta">
+                            {% if post.category %}
+                            <span class="kb-category">{{ post.category }}</span>
+                            {% endif %}
+                            <span class="kb-views">{{ post.views }} keer bekeken</span>
+                        </div>
+                        <a href="{{ url_for('kb_post', slug=post.slug) }}" class="btn-link">Lees artikel →</a>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">📚</div>
+                        <h3>Nog geen artikelen</h3>
+                        <p>Binnenkort verschijnen hier handige artikelen in onze kennisbank.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function filterKB() {
+    const query = document.getElementById('kb-search').value.toLowerCase();
+    const articles = document.querySelectorAll('.kb-card');
+
+    articles.forEach(article => {
+        const title = article.dataset.title;
+        if (title.includes(query)) {
+            article.style.display = '';
+        } else {
+            article.style.display = 'none';
+        }
+    });
+}
+
+document.querySelectorAll('.kb-categories a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.kb-categories a').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        // Category filtering logic would go here
+    });
+});
+</script>
+{% endblock %}

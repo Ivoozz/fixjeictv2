@@ -1,0 +1,52 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Bewerk Gebruiker{% endblock %}
+
+{% block content %}
+<div class="admin-detail">
+    <div class="admin-detail-header">
+        <a href="{{ url_for('admin_users') }}" class="btn-link">← Terug naar gebruikers</a>
+    </div>
+
+    <div class="detail-card">
+        <form method="POST" class="admin-form">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" value="{{ user.email }}" disabled>
+                <small>Email kan niet worden gewijzigd</small>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Naam</label>
+                <input type="text" id="name" name="name" value="{{ user.name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="company">Bedrijf</label>
+                <input type="text" id="company" name="company" value="{{ user.company or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="role">Rol</label>
+                <select id="role" name="role">
+                    <option value="client" {% if user.role == 'client' %}selected{% endif %}>Klant</option>
+                    <option value="fixer" {% if user.role == 'fixer' %}selected{% endif %}>Fixer</option>
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_active" {% if user.is_active %}checked{% endif %}>
+                    <span>Account actief</span>
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">Annuleren</a>
+                <button type="submit" class="btn btn-primary">Opslaan</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

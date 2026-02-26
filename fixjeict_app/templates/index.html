@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}FixJeICT - Professionele ICT Ondersteuning{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">Uw ICT Partner</h1>
+            <p class="hero-subtitle">Snelle, betrouwbare oplossingen voor al uw IT-problemen. Professionele support met een persoonlijke touch.</p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('contact') }}" class="btn btn-primary btn-lg">Contact Opnemen</a>
+                <a href="{{ url_for('services') }}" class="btn btn-secondary btn-lg">Onze Diensten</a>
+            </div>
+        </div>
+        <div class="hero-stats">
+            <div class="stat-item">
+                <div class="stat-number">500+</div>
+                <div class="stat-label">Tickets Opgelost</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">98%</div>
+                <div class="stat-label">Tevreden Klanten</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Support</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section-light">
+    <div class="container">
+        <h2 class="section-title">Waarom FixJeICT?</h2>
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Snel Response</h3>
+                <p>Binnen 30 minuten reactie op uw verzoek. Wij snappen dat uw IT niet kan wachten.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>Beveiligd</h3>
+                <p>Uw data is veilig bij ons. Wij werken volgens de strengste security standaarden.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💡</div>
+                <h3>Expertise</h3>
+                <p>Jarenlange ervaring met diverse IT-omgevingen. Wij lossen het op.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Transparant</h3>
+                <p>Altijd inzicht in de status van uw tickets. Geen verrassingen.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if featured_posts %}
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">Laatste Nieuws</h2>
+        <div class="blog-grid">
+            {% for post in featured_posts %}
+            <article class="blog-card">
+                {% if post.image_url %}
+                <div class="blog-image">
+                    <img src="{{ post.image_url }}" alt="{{ post.title }}">
+                </div>
+                {% endif %}
+                <div class="blog-content">
+                    <h3>{{ post.title }}</h3>
+                    <p class="blog-excerpt">{{ post.excerpt or post.content[:150] }}...</p>
+                    <a href="{{ url_for('blog_post', slug=post.slug) }}" class="btn-link">Lees meer →</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        <div class="text-center" style="margin-top: 30px;">
+            <a href="{{ url_for('blog') }}" class="btn btn-secondary">Bekijk alle berichten</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if testimonials %}
+<section class="section section-light">
+    <div class="container">
+        <h2 class="section-title">Wat klanten zeggen</h2>
+        <div class="testimonials">
+            {% for testimonial in testimonials %}
+            <div class="testimonial-card">
+                <div class="testimonial-content">{{ testimonial.content }}</div>
+                <div class="testimonial-author">
+                    <strong>{{ testimonial.name }}</strong>
+                    {% if testimonial.company %}
+                    <span>{{ testimonial.company }}</span>
+                    {% endif %}
+                </div>
+                {% if testimonial.rating %}
+                <div class="testimonial-rating">
+                    {% for i in range(testimonial.rating) %}★{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="section cta-section">
+    <div class="container">
+        <div class="cta-box">
+            <h2>Klaar om uw IT-problemen op te lossen?</h2>
+            <p>Neem vandaag nog contact op en ervaar het verschil van FixJeICT.</p>
+            <a href="{{ url_for('contact') }}" class="btn btn-primary btn-lg">Start Nu</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

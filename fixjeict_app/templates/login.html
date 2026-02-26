@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Inloggen - FixJeICT{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <h1 class="page-title">Inloggen</h1>
+        <p class="page-subtitle">Log in om uw tickets te beheren</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="auth-wrapper">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>🔐 Inloggen</h2>
+                    <p>Wij gebruiken een wachtwoordloos login systeem. Voer uw email in en we sturen u een magic link.</p>
+                </div>
+                <form method="POST" class="auth-form">
+                    <div class="form-group">
+                        <label for="email">Emailadres</label>
+                        <input type="email" id="email" name="email" required placeholder="uw@email.nl" autofocus>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Verstuur Login Link</button>
+                </form>
+                <div class="auth-footer">
+                    <p>🔒 Uw data is veilig. Wij slaan geen wachtwoorden op.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

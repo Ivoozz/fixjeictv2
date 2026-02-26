@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Blog - FixJeICT{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <h1 class="page-title">Blog</h1>
+        <p class="page-subtitle">Nieuws, tips en updates uit de IT-wereld</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% if posts %}
+            <div class="blog-grid">
+                {% for post in posts %}
+                <article class="blog-card">
+                    {% if post.image_url %}
+                    <div class="blog-image">
+                        <img src="{{ post.image_url }}" alt="{{ post.title }}">
+                    </div>
+                    {% endif %}
+                    <div class="blog-content">
+                        <div class="blog-meta">
+                            <span class="blog-date">{{ post.published_at.strftime('%d %B %Y') if post.published_at else post.created_at.strftime('%d %B %Y') }}</span>
+                        </div>
+                        <h3>{{ post.title }}</h3>
+                        <p class="blog-excerpt">{{ post.excerpt or post.content[:200] }}...</p>
+                        <a href="{{ url_for('blog_post', slug=post.slug) }}" class="btn-link">Lees meer →</a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📝</div>
+                <h3>Nog geen blog berichten</h3>
+                <p>Binnenkort verschijnen hier interessante artikelen over IT-tips, nieuwigheden en meer.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

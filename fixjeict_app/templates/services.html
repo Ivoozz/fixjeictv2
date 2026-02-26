@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Diensten - FixJeICT{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <h1 class="page-title">Onze Diensten</h1>
+        <p class="page-subtitle">Professionele ICT oplossingen voor uw bedrijf</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">💻</div>
+                <h3>Hardware Support</h3>
+                <p>Reparatie, onderhoud en advies voor al uw computer hardware. Laptops, desktops, servers en meer.</p>
+                <ul class="service-list">
+                    <li>Reparatie & Onderhoud</li>
+                    <li>Hardware Upgrade</li>
+                    <li>Server Configuratie</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">🔧</div>
+                <h3>Software Support</h3>
+                <p>Hulp bij installatie, configuratie en problemen met software. Windows, macOS, Linux en meer.</p>
+                <ul class="service-list">
+                    <li>Installatie & Configuratie</li>
+                    <li>Virusverwijdering</li>
+                    <li>Data Herstel</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">🌐</div>
+                <h3>Netwerkbeheer</h3>
+                <p>Ontwerp, implementatie en beheer van netwerken. WiFi, LAN, WAN en cloud verbindingen.</p>
+                <ul class="service-list">
+                    <li>Netwerkdesign</li>
+                    <li>WiFi Optimalisatie</li>
+                    <li>VPN Configuratie</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">☁️</div>
+                <h3>Cloud Solutions</h3>
+                <p>Migratie en beheer van cloud diensten. Office 365, Google Workspace, AWS en Azure.</p>
+                <ul class="service-list">
+                    <li>Cloud Migratie</li>
+                    <li>Backup & Recovery</li>
+                    <li>SaaS Integratie</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">🔒</div>
+                <h3>Beveiliging</h3>
+                <p>Bescherm uw bedrijf tegen cyberdreigingen. Firewall, antivirus en security audits.</p>
+                <ul class="service-list">
+                    <li>Security Audit</li>
+                    <li>Firewall Configuratie</li>
+                    <li>Employee Training</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">📱</div>
+                <h3>Mobile Device Management</h3>
+                <p>Beheer alle mobiele apparaten binnen uw organisatie. iPhones, Androids en tablets.</p>
+                <ul class="service-list">
+                    <li>MDM Implementatie</li>
+                    <li>App Management</li>
+                    <li>Device Security</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section-light">
+    <div class="container">
+        <div class="cta-box">
+            <h2>Meer informatie nodig?</h2>
+            <p>Neem contact met ons op voor een vrijblijvend gesprek over uw IT-behoeften.</p>
+            <a href="{{ url_for('contact') }}" class="btn btn-primary btn-lg">Contacteer Ons</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Kennisbank{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>Kennisbank Artikelen</h2>
+    <a href="{{ url_for('admin_kb_new') }}" class="btn btn-primary">+ Nieuw Artikel</a>
+</div>
+
+{% if posts %}
+<div class="list">
+    {% for post in posts %}
+    <div class="list-item">
+        <div class="list-item-main">
+            <div class="list-item-info">
+                <strong>{{ post.title }}</strong>
+                <div class="list-item-meta">
+                    {% if post.category %}<span class="badge">{{ post.category }}</span>{% endif %}
+                    <span>{{ post.views }} keer bekeken</span>
+                    {% if post.is_published %}<span class="badge badge-success">Gepubliceerd</span>{% else %}<span class="badge badge-inactive">Concept</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="list-item-actions">
+            <span class="list-item-date">{{ post.created_at.strftime('%d-%m-%Y') }}</span>
+            <div class="list-item-buttons">
+                <a href="{{ url_for('admin_kb_edit', id=post.id) }}" class="btn btn-sm btn-secondary">Bewerk</a>
+                <form method="POST" action="{{ url_for('admin_kb_delete', id=post.id) }}" onsubmit="return confirm('Weet u het zeker?')" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">Verwijder</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📚</div>
+    <h3>Geen kennisbank artikelen</h3>
+    <p>Maak uw eerste kennisbank artikel aan.</p>
+    <a href="{{ url_for('admin_kb_new') }}" class="btn btn-primary">+ Nieuw Artikel</a>
+</div>
+{% endif %}
+{% endblock %}

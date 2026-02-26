@@ -1,0 +1,150 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Ticket #{{ ticket.id }}{% endblock %}
+
+{% block content %}
+<div class="admin-detail">
+    <div class="admin-detail-header">
+        <a href="{{ url_for('admin_tickets') }}" class="btn-link">← Terug naar tickets</a>
+        <div class="header-actions">
+            <a href="{{ url_for('admin_ticket_edit', id=ticket.id) }}" class="btn btn-secondary">Bewerk</a>
+            <form method="POST" action="{{ url_for('admin_ticket_delete', id=ticket.id) }}" onsubmit="return confirm('Weet u het zeker?')" style="display: inline;">
+                <button type="submit" class="btn btn-danger">Verwijder</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <h3>Ticket Details</h3>
+        <div class="detail-grid">
+            <div class="detail-row">
+                <strong>ID:</strong>
+                <span>#{{ ticket.id }}</span>
+            </div>
+            <div class="detail-row">
+                <strong>Status:</strong>
+                <span class="badge badge-status-{{ ticket.status|replace(' ', '-')|lower }}">{{ ticket.status }}</span>
+            </div>
+            <div class="detail-row">
+                <strong>Prioriteit:</strong>
+                <span class="badge badge-priority-{{ ticket.priority }}">{{ ticket.priority }}</span>
+            </div>
+            <div class="detail-row">
+                <strong>Klant:</strong>
+                <span>{{ ticket.client.name }} ({{ ticket.client.email }})</span>
+            </div>
+            {% if ticket.fixer %}
+            <div class="detail-row">
+                <strong>Fixer:</strong>
+                <span>{{ ticket.fixer.name }}</span>
+            </div>
+            {% endif %}
+            {% if ticket.category %}
+            <div class="detail-row">
+                <strong>Categorie:</strong>
+                <span>{{ ticket.category.name }}</span>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <strong>Aangemaakt:</strong>
+                <span>{{ ticket.created_at.strftime('%d-%m-%Y %H:%M') }}</span>
+            </div>
+            <div class="detail-row">
+                <strong>Bijgewerkt:</strong>
+                <span>{{ ticket.updated_at.strftime('%d-%m-%Y %H:%M') }}</span>
+            </div>
+            {% if ticket.estimated_hours %}
+            <div class="detail-row">
+                <strong>Geschat:</strong>
+                <span>{{ ticket.estimated_hours }}h</span>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <strong>Besteed:</strong>
+                <span>{{ ticket.actual_hours|round(1) }}h</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <h3>Beschrijving</h3>
+        <p>{{ ticket.description }}</p>
+    </div>
+
+    <div class="detail-card">
+        <h3>Berichten</h3>
+        {% if messages %}
+        <div class="message-list">
+            {% for message in messages %}
+            <div class="message {{ 'message-internal' if message.is_internal else '' }}">
+                <div class="message-header">
+                    <strong>{{ message.user.name }}</strong>
+                    <span class="message-time">{{ message.created_at.strftime('%d-%m-%Y %H:%M') }}</span>
+                    {% if message.is_internal %}
+                    <span class="badge badge-internal">Intern</span>
+                    {% endif %}
+                </div>
+                <div class="message-content">{{ message.content }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state empty-state-compact">
+            <p>Nog geen berichten</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('admin_ticket_message', id=ticket.id) }}" class="message-form">
+            <textarea name="content" rows="3" placeholder="Type uw bericht..." required></textarea>
+            <label class="checkbox-label">
+                <input type="checkbox" name="is_internal">
+                <span>Interne notitie</span>
+            </label>
+            <button type="submit" class="btn btn-primary">Verstuur</button>
+        </form>
+    </div>
+
+    {% if notes %}
+    <div class="detail-card">
+        <h3>Interne Notities</h3>
+        {% for note in notes %}
+        <div class="note">
+            <div class="note-header">
+                <strong>{{ note.user.name }}</strong>
+                <span class="note-time">{{ note.created_at.strftime('%d-%m-%Y %H:%M') }}</span>
+            </div>
+            <div class="note-content">{{ note.content }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="detail-card">
+        <h3>Tijdregistratie</h3>
+        {% if time_logs %}
+        <div class="time-log-list">
+            {% for log in time_logs %}
+            <div class="time-log-entry">
+                <div class="time-log-user">{{ log.user.name }}</div>
+                <div class="time-log-time">{{ log.hours }}h</div>
+                <div class="time-log-desc">{{ log.description or '-' }}</div>
+                <div class="time-log-date">{{ log.created_at.strftime('%d-%m-%Y') }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state empty-state-compact">
+            <p>Nog geen tijd geregistreerd</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('admin_ticket_time', id=ticket.id) }}" class="time-log-form">
+            <div class="form-row">
+                <input type="number" name="hours" step="0.25" min="0.25" placeholder="Uren" required>
+                <input type="text" name="description" placeholder="Beschrijving (optioneel)">
+                <button type="submit" class="btn btn-primary">+ Tijd</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Gebruikers{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>Alle Gebruikers</h2>
+</div>
+
+{% if users %}
+<div class="list">
+    {% for user in users %}
+    <div class="list-item">
+        <div class="list-item-main">
+            <div class="list-item-avatar">{{ user.name[0]|upper }}</div>
+            <div class="list-item-info">
+                <strong>{{ user.name }}</strong>
+                <div class="list-item-meta">
+                    <span>{{ user.email }}</span>
+                    {% if user.company %}<span>{{ user.company }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="list-item-actions">
+            <span class="badge badge-role">{{ user.role }}</span>
+            {% if not user.is_active %}<span class="badge badge-inactive">Inactief</span>{% endif %}
+            <span class="list-item-date">{{ user.created_at.strftime('%d-%m-%Y') }}</span>
+            <div class="list-item-buttons">
+                <a href="{{ url_for('admin_user_edit', id=user.id) }}" class="btn btn-sm btn-secondary">Bewerk</a>
+                <form method="POST" action="{{ url_for('admin_user_delete', id=user.id) }}" onsubmit="return confirm('Weet u het zeker?')" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">Verwijder</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">👥</div>
+    <h3>Geen gebruikers</h3>
+    <p>Er zijn nog geen gebruikers geregistreerd.</p>
+</div>
+{% endif %}
+{% endblock %}

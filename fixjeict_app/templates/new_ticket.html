@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Nieuw Ticket - FixJeICT{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <h1 class="page-title">Nieuw Ticket</h1>
+        <p class="page-subtitle">Beschrijf uw probleem en wij helpen u zo snel mogelijk</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="form-wrapper">
+            <form method="POST" class="ticket-form">
+                <div class="form-group">
+                    <label for="title">Onderwerp *</label>
+                    <input type="text" id="title" name="title" required placeholder="Korte beschrijving van het probleem">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category_id">Categorie</label>
+                        <select id="category_id" name="category_id">
+                            <option value="">Selecteer categorie...</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Prioriteit</label>
+                        <select id="priority" name="priority">
+                            <option value="laag">Laag</option>
+                            <option value="normaal" selected>Normaal</option>
+                            <option value="hoog">Hoog</option>
+                            <option value="spoed">🚨 Spoed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Beschrijving *</label>
+                    <textarea id="description" name="description" rows="8" required placeholder="Beschrijf uw probleem zo gedetailleerd mogelijk..."></textarea>
+                    <small class="form-help">Voeg ook foutmeldingen, stappen om het probleem te reproduceren, en screenshots toe indien mogelijk.</small>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Annuleren</a>
+                    <button type="submit" class="btn btn-primary btn-lg">Ticket Aanmaken</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

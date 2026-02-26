@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Contact - FixJeICT{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <h1 class="page-title">Contact</h1>
+        <p class="page-subtitle">Heeft u vragen? Neem gerust contact op!</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="contact-layout">
+            <div class="contact-info">
+                <h2>Contactgegevens</h2>
+                <div class="contact-item">
+                    <div class="contact-icon">📧</div>
+                    <div>
+                        <strong>Email</strong>
+                        <p>info@fixjeict.nl</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📞</div>
+                    <div>
+                        <strong>Telefoon</strong>
+                        <p>020-1234567</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">📍</div>
+                    <div>
+                        <strong>Adres</strong>
+                        <p>Technologieplein 1<br>1012 AB Amsterdam</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">🕐</div>
+                    <div>
+                        <strong>Openingstijden</strong>
+                        <p>Maandag - Vrijdag: 09:00 - 18:00<br>Zaterdag: 10:00 - 16:00</p>
+                    </div>
+                </div>
+
+                <div class="support-box">
+                    <h3>🚀 Spoedgeval?</h3>
+                    <p>Voor urgente problemen kunt u ons 24/7 bereiken via ons spoednummer.</p>
+                    <p class="urgent-phone">📞 0800-FIXJEICT</p>
+                </div>
+            </div>
+
+            <div class="contact-form-wrapper">
+                <form class="contact-form" method="POST">
+                    <h2>Stuur een bericht</h2>
+                    <div class="form-group">
+                        <label for="name">Naam *</label>
+                        <input type="text" id="name" name="name" required placeholder="Uw naam">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required placeholder="uw@email.nl">
+                    </div>
+                    <div class="form-group">
+                        <label for="company">Bedrijf</label>
+                        <input type="text" id="company" name="company" placeholder="Uw bedrijf (optioneel)">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Telefoon</label>
+                        <input type="tel" id="phone" name="phone" placeholder="06-12345678 (optioneel)">
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Bericht *</label>
+                        <textarea id="message" name="message" rows="5" required placeholder="Hoe kunnen we u helpen?"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Verstuur Bericht</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

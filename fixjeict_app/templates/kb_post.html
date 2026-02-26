@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - Kennisbank{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <a href="{{ url_for('knowledge_base') }}" class="btn-link" style="margin-bottom: 20px; display: inline-block;">← Terug naar kennisbank</a>
+        <h1 class="page-title">{{ post.title }}</h1>
+        {% if post.category %}
+        <span class="badge badge-category">{{ post.category }}</span>
+        {% endif %}
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <article class="kb-post-full">
+            <div class="kb-post-content">
+                {{ post.content|safe }}
+            </div>
+
+            <div class="kb-post-footer">
+                <p class="kb-views-stat">Dit artikel is {{ post.views }} keer bekeken</p>
+                <a href="{{ url_for('knowledge_base') }}" class="btn btn-secondary">← Terug naar overzicht</a>
+            </div>
+        </article>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Fixer Dashboard - FixJeICT{% endblock %}
+
+{% block content %}
+<section class="section section-dashboard">
+    <div class="container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Fixer Dashboard</h1>
+                <p class="dashboard-subtitle">Beheer uw tickets en registratie</p>
+            </div>
+        </div>
+
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <h3>Mijn Tickets</h3>
+                <div class="value">{{ my_tickets|length }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Beschikbaar</h3>
+                <div class="value">{{ available_tickets|length }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Uren deze maand</h3>
+                <div class="value">
+                    {% set total_hours = my_tickets|sum(attribute='actual_hours') %}
+                    {{ total_hours|round(1) }}h
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>Gereed</h3>
+                <div class="value">{{ my_tickets|selectattr('status', 'equalto', 'Gereed')|list|length }}</div>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Mijn Toegewezen Tickets</h2>
+            {% if my_tickets %}
+            <div class="ticket-list">
+                {% for ticket in my_tickets %}
+                <div class="ticket-item">
+                    <div class="ticket-main">
+                        <div class="ticket-id">#{{ ticket.id }}</div>
+                        <div class="ticket-info">
+                            <h3><a href="{{ url_for('ticket_detail', id=ticket.id) }}">{{ ticket.title }}</a></h3>
+                            <div class="ticket-meta">
+                                {% if ticket.category %}
+                                <span class="badge badge-category">{{ ticket.category.name }}</span>
+                                {% endif %}
+                                <span class="badge badge-priority-{{ ticket.priority }}">{{ ticket.priority|capitalize }}</span>
+                                <span class="ticket-client">{{ ticket.client.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ticket-status">
+                        <span class="badge badge-status badge-status-{{ ticket.status|replace(' ', '-')|lower }}">{{ ticket.status }}</span>
+                        <div class="ticket-hours">{{ ticket.actual_hours|round(1) }}h</div>
+                        <div class="ticket-date">{{ ticket.updated_at.strftime('%d-%m-%Y') }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>Geen tickets toegewezen</h3>
+                <p>Bekijk de beschikbare tickets om te beginnen.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Beschikbare Tickets</h2>
+            {% if available_tickets %}
+            <div class="ticket-list">
+                {% for ticket in available_tickets %}
+                <div class="ticket-item {% if not ticket.fixer_id %}ticket-available{% endif %}">
+                    <div class="ticket-main">
+                        <div class="ticket-id">#{{ ticket.id }}</div>
+                        <div class="ticket-info">
+                            <h3><a href="{{ url_for('ticket_detail', id=ticket.id) }}">{{ ticket.title }}</a></h3>
+                            <div class="ticket-meta">
+                                {% if ticket.category %}
+                                <span class="badge badge-category">{{ ticket.category.name }}</span>
+                                {% endif %}
+                                <span class="badge badge-priority-{{ ticket.priority }}">{{ ticket.priority|capitalize }}</span>
+                                <span class="ticket-client">{{ ticket.client.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ticket-status">
+                        <span class="badge badge-status badge-status-{{ ticket.status|replace(' ', '-')|lower }}">{{ ticket.status }}</span>
+                        {% if not ticket.fixer_id %}
+                        <form method="POST" action="{{ url_for('claim_ticket', id=ticket.id) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-primary">Claim</button>
+                        </form>
+                        {% endif %}
+                        <div class="ticket-date">{{ ticket.updated_at.strftime('%d-%m-%Y') }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>Geen beschikbare tickets</h3>
+                <p>Er zijn momenteel geen openstaande tickets om op te pakken.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

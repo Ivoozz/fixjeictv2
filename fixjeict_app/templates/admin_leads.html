@@ -1,0 +1,50 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Leads{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>Leads</h2>
+</div>
+
+{% if leads %}
+<div class="list">
+    {% for lead in leads %}
+    <div class="list-item">
+        <div class="list-item-main">
+            <div class="list-item-avatar">{{ lead.name[0]|upper }}</div>
+            <div class="list-item-info">
+                <strong>{{ lead.name }}</strong>
+                <div class="list-item-meta">
+                    <span>{{ lead.email }}</span>
+                    {% if lead.company %}<span>{{ lead.company }}</span>{% endif %}
+                    {% if lead.phone %}<span>{{ lead.phone }}</span>{% endif %}
+                </div>
+                {% if lead.message %}
+                <div class="list-item-desc">{{ lead.message[:100] }}{% if lead.message|length > 100 %}...{% endif %}</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="list-item-actions">
+            <span class="badge {{ 'badge-success' if lead.status == 'contacted' else 'badge-warning' if lead.status == 'in_progress' else 'badge-inactive' }}">
+                {{ lead.status|capitalize }}
+            </span>
+            <span class="list-item-date">{{ lead.created_at.strftime('%d-%m-%Y') }}</span>
+            <div class="list-item-buttons">
+                <a href="{{ url_for('admin_lead_edit', id=lead.id) }}" class="btn btn-sm btn-secondary">Bewerk</a>
+                <form method="POST" action="{{ url_for('admin_lead_delete', id=lead.id) }}" onsubmit="return confirm('Weet u het zeker?')" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">Verwijder</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">🎯</div>
+    <h3>Geen leads</h3>
+    <p>Er zijn nog geen leads binnengekomen via het contactformulier.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Bewerk Lead{% endblock %}
+
+{% block content %}
+<div class="admin-detail">
+    <div class="admin-detail-header">
+        <a href="{{ url_for('admin_leads') }}" class="btn-link">← Terug naar leads</a>
+    </div>
+
+    <div class="detail-card">
+        <div class="detail-grid">
+            <div class="detail-row">
+                <strong>Naam:</strong>
+                <span>{{ lead.name }}</span>
+            </div>
+            <div class="detail-row">
+                <strong>Email:</strong>
+                <span>{{ lead.email }}</span>
+            </div>
+            {% if lead.company %}
+            <div class="detail-row">
+                <strong>Bedrijf:</strong>
+                <span>{{ lead.company }}</span>
+            </div>
+            {% endif %}
+            {% if lead.phone %}
+            <div class="detail-row">
+                <strong>Telefoon:</strong>
+                <span>{{ lead.phone }}</span>
+            </div>
+            {% endif %}
+            <div class="detail-row">
+                <strong>Bericht:</strong>
+                <span>{{ lead.message or '-' }}</span>
+            </div>
+            <div class="detail-row">
+                <strong>Aangemaakt:</strong>
+                <span>{{ lead.created_at.strftime('%d-%m-%Y %H:%M') }}</span>
+            </div>
+        </div>
+
+        <form method="POST" class="admin-form" style="margin-top: 30px;">
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="new" {% if lead.status == 'new' %}selected{% endif %}>Nieuw</option>
+                    <option value="contacted" {% if lead.status == 'contacted' %}selected{% endif %}>Gemaild</option>
+                    <option value="in_progress" {% if lead.status == 'in_progress' %}selected{% endif %}>In behandeling</option>
+                    <option value="closed" {% if lead.status == 'closed' %}selected{% endif %}>Afgesloten</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin_leads') }}" class="btn btn-secondary">Terug</a>
+                <button type="submit" class="btn btn-primary">Opslaan</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

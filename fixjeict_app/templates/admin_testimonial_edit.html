@@ -1,0 +1,53 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}{{ 'Nieuw Testimonial' if not testimonial else 'Bewerk Testimonial' }}{% endblock %}
+
+{% block content %}
+<div class="admin-detail">
+    <div class="admin-detail-header">
+        <a href="{{ url_for('admin_testimonials') }}" class="btn-link">← Terug naar testimonials</a>
+    </div>
+
+    <div class="detail-card">
+        <form method="POST" class="admin-form">
+            <div class="form-group">
+                <label for="name">Naam</label>
+                <input type="text" id="name" name="name" value="{{ testimonial.name if testimonial else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="company">Bedrijf</label>
+                <input type="text" id="company" name="company" value="{{ testimonial.company if testimonial else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="rating">Rating (1-5)</label>
+                <select id="rating" name="rating">
+                    {% for i in range(5, 0, -1) %}
+                    <option value="{{ i }}" {% if testimonial and testimonial.rating == i %}selected{% endif %}>
+                        {{ i }} ster{{ 'ren' if i != 1 else '' }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="content">Testimonial</label>
+                <textarea id="content" name="content" rows="5" required>{{ testimonial.content if testimonial else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_published" {% if testimonial and testimonial.is_published %}checked{% endif %}>
+                    <span>Publiceren</span>
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin_testimonials') }}" class="btn btn-secondary">Annuleren</a>
+                <button type="submit" class="btn btn-primary">{{ 'Toevoegen' if not testimonial else 'Opslaan' }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Categorieën{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>Ticket Categorieën</h2>
+    <a href="{{ url_for('admin_category_new') }}" class="btn btn-primary">+ Nieuwe Categorie</a>
+</div>
+
+{% if categories %}
+<div class="list">
+    {% for category in categories %}
+    <div class="list-item">
+        <div class="list-item-main">
+            <div class="list-item-icon">{{ category.icon or '📁' }}</div>
+            <div class="list-item-info">
+                <strong>{{ category.name }}</strong>
+                <div class="list-item-meta">
+                    <span>{{ category.description or '-' }}</span>
+                    <span>{{ category.tickets|length }} tickets</span>
+                </div>
+            </div>
+        </div>
+        <div class="list-item-actions">
+            {% if not category.is_active %}<span class="badge badge-inactive">Inactief</span>{% endif %}
+            <div class="list-item-buttons">
+                <a href="{{ url_for('admin_category_edit', id=category.id) }}" class="btn btn-sm btn-secondary">Bewerk</a>
+                <form method="POST" action="{{ url_for('admin_category_delete', id=category.id) }}" onsubmit="return confirm('Weet u het zeker?')" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">Verwijder</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📂</div>
+    <h3>Geen categorieën</h3>
+    <p>Maak uw eerste categorie aan om tickets te organiseren.</p>
+    <a href="{{ url_for('admin_category_new') }}" class="btn btn-primary">+ Nieuwe Categorie</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}{{ 'Nieuw Kennisbank Artikel' if not post else 'Bewerk Kennisbank Artikel' }}{% endblock %}
+
+{% block content %}
+<div class="admin-detail">
+    <div class="admin-detail-header">
+        <a href="{{ url_for('admin_kb') }}" class="btn-link">← Terug naar kennisbank</a>
+    </div>
+
+    <div class="detail-card">
+        <form method="POST" class="admin-form">
+            <div class="form-group">
+                <label for="title">Titel</label>
+                <input type="text" id="title" name="title" value="{{ post.title if post else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="category">Categorie</label>
+                <input type="text" id="category" name="category" value="{{ post.category if post else '' }}" placeholder="Bijv. Hardware, Software, Netwerk">
+            </div>
+
+            <div class="form-group">
+                <label for="content">Content (HTML toegestaan)</label>
+                <textarea id="content" name="content" rows="15" required>{{ post.content if post else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_published" {% if post and post.is_published %}checked{% endif %}>
+                    <span>Publiceren</span>
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin_kb') }}" class="btn btn-secondary">Annuleren</a>
+                <button type="submit" class="btn btn-primary">{{ 'Aanmaken' if not post else 'Opslaan' }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

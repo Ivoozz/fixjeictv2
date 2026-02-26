@@ -1,0 +1,47 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Testimonials{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>Testimonials</h2>
+    <a href="{{ url_for('admin_testimonial_new') }}" class="btn btn-primary">+ Nieuw Testimonial</a>
+</div>
+
+{% if testimonials %}
+<div class="list">
+    {% for testimonial in testimonials %}
+    <div class="list-item">
+        <div class="list-item-main">
+            <div class="list-item-avatar">{{ testimonial.name[0]|upper }}</div>
+            <div class="list-item-info">
+                <strong>{{ testimonial.name }}</strong>
+                <div class="list-item-meta">
+                    {% if testimonial.company %}<span>{{ testimonial.company }}</span>{% endif %}
+                    <span>{{ '⭐' * testimonial.rating }}</span>
+                </div>
+                <div class="list-item-desc">{{ testimonial.content[:100] }}{% if testimonial.content|length > 100 %}...{% endif %}</div>
+            </div>
+        </div>
+        <div class="list-item-actions">
+            {% if testimonial.is_published %}<span class="badge badge-success">Gepubliceerd</span>{% else %}<span class="badge badge-inactive">Concept</span>{% endif %}
+            <span class="list-item-date">{{ testimonial.created_at.strftime('%d-%m-%Y') }}</span>
+            <div class="list-item-buttons">
+                <a href="{{ url_for('admin_testimonial_edit', id=testimonial.id) }}" class="btn btn-sm btn-secondary">Bewerk</a>
+                <form method="POST" action="{{ url_for('admin_testimonial_delete', id=testimonial.id) }}" onsubmit="return confirm('Weet u het zeker?')" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">Verwijder</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">⭐</div>
+    <h3>Geen testimonials</h3>
+    <p>Voeg uw eerste klantreview toe.</p>
+    <a href="{{ url_for('admin_testimonial_new') }}" class="btn btn-primary">+ Nieuw Testimonial</a>
+</div>
+{% endif %}
+{% endblock %}

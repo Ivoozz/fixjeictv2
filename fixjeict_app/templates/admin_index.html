@@ -1,0 +1,79 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Totaal Tickets</h3>
+        <div class="value">{{ stats.tickets }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Openstaand</h3>
+        <div class="value">{{ stats.open_tickets }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Gebruikers</h3>
+        <div class="value">{{ stats.users }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Nieuwe Leads</h3>
+        <div class="value">{{ stats.leads }}</div>
+    </div>
+</div>
+
+<div class="admin-grid">
+    <div class="admin-section">
+        <div class="section-header">
+            <h2>Recente Tickets</h2>
+            <a href="{{ url_for('admin_tickets') }}" class="btn btn-sm btn-secondary">Bekijk alles</a>
+        </div>
+        {% if recent_tickets %}
+        <div class="list">
+            {% for ticket in recent_tickets %}
+            <div class="list-item">
+                <div class="list-item-main">
+                    <strong>#{{ ticket.id }}</strong>
+                    <span>{{ ticket.title }}</span>
+                </div>
+                <div class="list-item-meta">
+                    <span class="badge badge-status-{{ ticket.status|replace(' ', '-')|lower }}">{{ ticket.status }}</span>
+                    <span class="list-item-date">{{ ticket.created_at.strftime('%d-%m') }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state empty-state-compact">
+            <p>Nog geen tickets</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="admin-section">
+        <div class="section-header">
+            <h2>Nieuwe Leads</h2>
+            <a href="{{ url_for('admin_leads') }}" class="btn btn-sm btn-secondary">Bekijk alles</a>
+        </div>
+        {% if recent_leads %}
+        <div class="list">
+            {% for lead in recent_leads %}
+            <div class="list-item">
+                <div class="list-item-main">
+                    <strong>{{ lead.name }}</strong>
+                    <span>{{ lead.email }}</span>
+                </div>
+                <div class="list-item-meta">
+                    <span class="list-item-date">{{ lead.created_at.strftime('%d-%m') }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state empty-state-compact">
+            <p>Nog geen leads</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

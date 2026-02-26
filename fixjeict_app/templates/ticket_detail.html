@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ticket.title }} - Ticket #{{ ticket.id }}{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <a href="{{ url_for('dashboard') }}" class="btn-link" style="margin-bottom: 20px; display: inline-block;">← Terug naar dashboard</a>
+        <h1 class="page-title">Ticket #{{ ticket.id }}: {{ ticket.title }}</h1>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="ticket-detail">
+            <div class="ticket-main-info">
+                <div class="ticket-meta-badges">
+                    {% if ticket.category %}
+                    <span class="badge badge-category">{{ ticket.category.name }}</span>
+                    {% endif %}
+                    <span class="badge badge-priority-{{ ticket.priority }}">{{ ticket.priority|capitalize }}</span>
+                    <span class="badge badge-status badge-status-{{ ticket.status|replace(' ', '-')|lower }}">{{ ticket.status }}</span>
+                </div>
+
+                <div class="ticket-description">
+                    <h3>Beschrijving</h3>
+                    <p>{{ ticket.description }}</p>
+                </div>
+
+                <div class="ticket-details-grid">
+                    <div class="detail-item">
+                        <strong>Aangemaakt:</strong>
+                        <span>{{ ticket.created_at.strftime('%d-%m-%Y %H:%M') }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Laatste update:</strong>
+                        <span>{{ ticket.updated_at.strftime('%d-%m-%Y %H:%M') }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Klant:</strong>
+                        <span>{{ ticket.client.name }}</span>
+                    </div>
+                    {% if ticket.fixer %}
+                    <div class="detail-item">
+                        <strong>Fixer:</strong>
+                        <span>{{ ticket.fixer.name }}</span>
+                    </div>
+                    {% endif %}
+                    {% if ticket.estimated_hours %}
+                    <div class="detail-item">
+                        <strong>Geschatte tijd:</strong>
+                        <span>{{ ticket.estimated_hours }} uur</span>
+                    </div>
+                    {% endif %}
+                    {% if ticket.actual_hours %}
+                    <div class="detail-item">
+                        <strong>Bestede tijd:</strong>
+                        <span>{{ ticket.actual_hours|round(1) }} uur</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if session.user_role in ['fixer', 'admin'] %}
+                <div class="ticket-actions">
+                    <form method="POST" action="{{ url_for('update_status', id=ticket.id) }}" class="status-form">
+                        <label>Wijzig status:</label>
+                        <select name="status" onchange="this.form.submit()">
+                            <option value="Open" {% if ticket.status == 'Open' %}selected{% endif %}>Open</option>
+                            <option value="In behandeling" {% if ticket.status == 'In behandeling' %}selected{% endif %}>In behandeling</option>
+                            <option value="Wacht op klant" {% if ticket.status == 'Wacht op klant' %}selected{% endif %}>Wacht op klant</option>
+                            <option value="Wacht op leverancier (van klant)" {% if ticket.status == 'Wacht op leverancier (van klant)' %}selected{% endif %}>Wacht op leverancier</option>
+                            <option value="Gereed" {% if ticket.status == 'Gereed' %}selected{% endif %}>Gereed</option>
+                            <option value="Afgemeld" {% if ticket.status == 'Afgemeld' %}selected{% endif %}>Afgemeld</option>
+                        </select>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="ticket-messages">
+                <h2>Berichten</h2>
+                {% if messages %}
+                <div class="message-list">
+                    {% for message in messages %}
+                    <div class="message {{ 'message-internal' if message.is_internal else '' }}">
+                        <div class="message-header">
+                            <strong>{{ message.user.name }}</strong>
+                            <span class="message-time">{{ message.created_at.strftime('%d-%m-%Y %H:%M') }}</span>
+                            {% if message.is_internal %}
+                            <span class="badge badge-internal">Intern</span>
+                            {% endif %}
+                        </div>
+                        <div class="message-content">{{ message.content }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state empty-state-compact">
+                    <p>Nog geen berichten</p>
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('add_message', id=ticket.id) }}" class="message-form">
+                    <textarea name="content" rows="3" placeholder="Type uw bericht..." required></textarea>
+                    {% if session.user_role in ['fixer', 'admin'] %}
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_internal">
+                        <span>Interne notitie</span>
+                    </label>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">Verstuur Bericht</button>
+                </form>
+            </div>
+
+            {% if notes %}
+            <div class="ticket-notes">
+                <h2>Interne Notities</h2>
+                {% for note in notes %}
+                <div class="note">
+                    <div class="note-header">
+                        <strong>{{ note.user.name }}</strong>
+                        <span class="note-time">{{ note.created_at.strftime('%d-%m-%Y %H:%M') }}</span>
+                    </div>
+                    <div class="note-content">{{ note.content }}</div>
+                </div>
+                {% endfor %}
+
+                <form method="POST" action="{{ url_for('add_note', id=ticket.id) }}" class="note-form">
+                    <textarea name="content" rows="2" placeholder="Interne notitie toevoegen..." required></textarea>
+                    <button type="submit" class="btn btn-sm btn-secondary">Notitie Toevoegen</button>
+                </form>
+            </div>
+            {% endif %}
+
+            {% if time_logs %}
+            <div class="ticket-time-logs">
+                <h2>Tijdregistratie</h2>
+                {% for log in time_logs %}
+                <div class="time-log-entry">
+                    <div class="time-log-user">{{ log.user.name }}</div>
+                    <div class="time-log-time">{{ log.hours }}h</div>
+                    <div class="time-log-desc">{{ log.description or '-' }}</div>
+                    <div class="time-log-date">{{ log.created_at.strftime('%d-%m-%Y') }}</div>
+                </div>
+                {% endfor %}
+
+                {% if session.user_role in ['fixer', 'admin'] %}
+                <form method="POST" action="{{ url_for('log_time', id=ticket.id) }}" class="time-log-form">
+                    <div class="form-row">
+                        <input type="number" name="hours" step="0.25" min="0.25" placeholder="Uren" required>
+                        <input type="text" name="description" placeholder="Beschrijving (optioneel)">
+                        <button type="submit" class="btn btn-sm btn-primary">+ Tijd</button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

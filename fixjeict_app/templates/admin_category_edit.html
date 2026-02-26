@@ -1,0 +1,50 @@
+{% extends "base_admin.html" %}
+
+{% block page_title %}{{ 'Nieuwe Categorie' if not category else 'Bewerk Categorie' }}{% endblock %}
+
+{% block content %}
+<div class="admin-detail">
+    <div class="admin-detail-header">
+        <a href="{{ url_for('admin_categories') }}" class="btn-link">← Terug naar categorieën</a>
+    </div>
+
+    <div class="detail-card">
+        <form method="POST" class="admin-form">
+            <div class="form-group">
+                <label for="name">Naam</label>
+                <input type="text" id="name" name="name" value="{{ category.name if category else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Beschrijving</label>
+                <input type="text" id="description" name="description" value="{{ category.description if category else '' }}">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="icon">Icoon (emoji)</label>
+                    <input type="text" id="icon" name="icon" value="{{ category.icon if category else '' }}" placeholder="📁">
+                </div>
+                <div class="form-group">
+                    <label for="order">Volgorde</label>
+                    <input type="number" id="order" name="order" value="{{ category.order if category else 0 }}">
+                </div>
+            </div>
+
+            {% if category %}
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_active" {% if category.is_active %}checked{% endif %}>
+                    <span>Categorie actief</span>
+                </label>
+            </div>
+            {% endif %}
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin_categories') }}" class="btn btn-secondary">Annuleren</a>
+                <button type="submit" class="btn btn-primary">{{ 'Aanmaken' if not category else 'Opslaan' }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

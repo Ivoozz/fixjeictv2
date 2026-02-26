@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Login Link Verzonden - FixJeICT{% endblock %}
+
+{% block content %}
+<section class="section section-hero">
+    <div class="container">
+        <h1 class="page-title">Check uw email</h1>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="auth-wrapper">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-icon">✉️</div>
+                    <h2>Login link verzonden!</h2>
+                    <p>We hebben een magic link gestuurd naar:</p>
+                    <p class="auth-email">{{ email }}</p>
+                    <p>Klik op de link in de email om in te loggen.</p>
+                </div>
+                <div class="auth-footer">
+                    <p>De link is 24 uur geldig.</p>
+                    <p class="text-center" style="margin-top: 20px;">
+                        <a href="{{ url_for('login') }}" class="btn-link">Nog geen email ontvangen? Opnieuw versturen</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

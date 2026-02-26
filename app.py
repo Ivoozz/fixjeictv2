@@ -314,14 +314,16 @@ def add_note(id):
 @fixer_required
 def log_time(id):
     user = get_current_user()
-    hours = float(request.form.get('hours'))
+    hours = int(request.form.get('hours', 0))
+    minutes = int(request.form.get('minutes', 0))
     description = request.form.get('description')
 
-    time_log = TimeLog(ticket_id=id, user_id=user.id, hours=hours, description=description)
+    time_log = TimeLog(ticket_id=id, user_id=user.id, hours=hours, minutes=minutes, description=description)
     db.session.add(time_log)
 
     ticket = Ticket.query.get(id)
-    ticket.actual_hours = db.session.query(db.func.sum(TimeLog.hours)).filter_by(ticket_id=id).scalar() or 0
+    time_logs = TimeLog.query.filter_by(ticket_id=id).all()
+    ticket.actual_hours = sum(tl.total_hours for tl in time_logs)
 
     db.session.commit()
 

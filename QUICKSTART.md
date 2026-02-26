@@ -10,28 +10,31 @@ Get FixJeICT v2 running in under 5 minutes!
 
 ## Installation
 
-### 1. Download the Code
+### Option 1: One-Line Install (Recommended)
 
 ```bash
-# If from git
+bash <(curl -fsSL https://raw.githubusercontent.com/ivoozz/fixjeictv2/main/install.sh)
+```
+
+This automatically downloads all files from GitHub and installs everything.
+
+### Option 2: Manual Install
+
+```bash
+# 1. Download the code
 git clone https://github.com/Ivoozz/fixjeictv2.git
 cd fixjeictv2
 
-# Or upload files to /opt/fixjeict
-```
-
-### 2. Run the Installer
-
-```bash
+# 2. Run the installer
 sudo bash install.sh
 ```
 
 Follow the prompts to configure:
-- Admin username and password
+- Admin username and password (default: admin/fixjeict2026)
 - Email settings (Resend API key)
 - Cloudflare settings (for email routing)
 
-### 3. That's It!
+### That's It!
 
 The installer will:
 - ✅ Create virtual environment

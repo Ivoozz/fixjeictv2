@@ -123,6 +123,9 @@
                 <a href="{{ url_for('admin_leads') }}" {% if request.endpoint and 'admin_lead' in request.endpoint %}class="active"{% endif %}}>🎯 Leads</a>
                 <a href="{{ url_for('admin_testimonials') }}" {% if request.endpoint and 'admin_testimonial' in request.endpoint %}class="active"{% endif %}}>⭐ Testimonials</a>
 
+                <div class="admin-nav-group">Systeem</div>
+                <a href="{{ url_for('admin_settings') }}" {% if request.endpoint == 'admin_settings' %}class="active"{% endif %}}>⚙️ Instellingen</a>
+
                 <div style="margin-top: 40px; padding: 0 20px;">
                     <a href="https://fixjeict.nl" target="_blank" style="color: rgba(255,255,255,0.5); font-size: 0.875rem;">← Naar website</a>
                 </div>

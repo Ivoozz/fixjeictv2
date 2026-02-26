@@ -69,7 +69,7 @@ echo
 
 # Check database
 echo "Checking database..."
-DB_PATH="/opt/fixjeict/fixjeict.db"
+DB_PATH="/opt/fixjeictv2/fixjeict.db"
 
 if [ -f "$DB_PATH" ]; then
     DB_SIZE=$(du -h "$DB_PATH" | cut -f1)
@@ -96,7 +96,7 @@ echo
 
 # Check backups
 echo "Checking recent backups..."
-BACKUP_DIR="/var/backups/fixjeict"
+BACKUP_DIR="/var/backups/fixjeictv2"
 if [ -d "$BACKUP_DIR" ]; then
     LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/fixjeict_*.db 2>/dev/null | head -1)
     if [ -n "$LATEST_BACKUP" ]; then

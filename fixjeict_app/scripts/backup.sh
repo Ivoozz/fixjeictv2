@@ -4,8 +4,8 @@
 # Creates timestamped backups and keeps last 30 days
 
 # Configuration
-INSTALL_DIR="/opt/fixjeict"
-BACKUP_DIR="/var/backups/fixjeict"
+INSTALL_DIR="/opt/fixjeictv2"
+BACKUP_DIR="/var/backups/fixjeictv2"
 DB_NAME="fixjeict.db"
 RETENTION_DAYS=30
 

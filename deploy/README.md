@@ -56,8 +56,8 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3 python3-pip python3-venv sqlite3 nginx certbot python3-certbot-nginx
 
 # Create installation directory
-sudo mkdir -p /opt/fixjeict
-cd /opt/fixjeict
+sudo mkdir -p /opt/fixjeictv2
+cd /opt/fixjeictv2
 ```
 
 #### 2. Application Setup
@@ -119,10 +119,10 @@ After=network.target
 [Service]
 Type=notify
 User=root
-WorkingDirectory=/opt/fixjeict
-Environment="PATH=/opt/fixjeict/venv/bin"
-EnvironmentFile=/opt/fixjeict/.env
-ExecStart=/opt/fixjeict/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 --timeout 120 --log-level info app:app
+WorkingDirectory=/opt/fixjeictv2
+Environment="PATH=/opt/fixjeictv2/venv/bin"
+EnvironmentFile=/opt/fixjeictv2/.env
+ExecStart=/opt/fixjeictv2/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 --timeout 120 --log-level info app:app
 Restart=always
 RestartSec=10
 
@@ -140,10 +140,10 @@ After=network.target
 [Service]
 Type=notify
 User=root
-WorkingDirectory=/opt/fixjeict
-Environment="PATH=/opt/fixjeict/venv/bin"
-EnvironmentFile=/opt/fixjeict/.env
-ExecStart=/opt/fixjeict/venv/bin/gunicorn -w 2 -b 127.0.0.1:5001 --timeout 120 --log-level info admin_app:admin_app
+WorkingDirectory=/opt/fixjeictv2
+Environment="PATH=/opt/fixjeictv2/venv/bin"
+EnvironmentFile=/opt/fixjeictv2/.env
+ExecStart=/opt/fixjeictv2/venv/bin/gunicorn -w 2 -b 127.0.0.1:5001 --timeout 120 --log-level info admin_app:admin_app
 Restart=always
 RestartSec=10
 
@@ -332,21 +332,21 @@ The installer sets up automated daily backups via cron:
 crontab -l | grep fixjeict
 
 # Backup location
-ls -la /var/backups/fixjeict/
+ls -la /var/backups/fixjeictv2/
 
 # Manual backup
-/opt/fixjeict/scripts/backup.sh
+/opt/fixjeictv2/scripts/backup.sh
 ```
 
 ### Backup Script Location
 
-The backup script is at `/opt/fixjeict/scripts/backup.sh`:
+The backup script is at `/opt/fixjeictv2/scripts/backup.sh`:
 
 ```bash
 #!/bin/bash
-BACKUP_DIR="/var/backups/fixjeict"
+BACKUP_DIR="/var/backups/fixjeictv2"
 DATE=$(date +%Y%m%d_%H%M%S)
-INSTALL_DIR="/opt/fixjeict"
+INSTALL_DIR="/opt/fixjeictv2"
 
 mkdir -p "$BACKUP_DIR"
 cp "$INSTALL_DIR/fixjeict.db" "$BACKUP_DIR/fixjeict_$DATE.db"
@@ -402,7 +402,7 @@ sudo journalctl -u fixjeict -n 50 --no-pager
 sudo systemctl restart fixjeict fixjeict-admin
 
 # Check for SQLite lock files
-ls -la /opt/fixjeict/*.db-wal
+ls -la /opt/fixjeictv2/*.db-wal
 ```
 
 ### Email Not Sending
@@ -443,7 +443,7 @@ Adjust worker count based on available RAM:
 
 ```ini
 # In systemd service file
-ExecStart=/opt/fixjeict/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 --timeout 120 app:app
+ExecStart=/opt/fixjeictv2/venv/bin/gunicorn -w 4 -b 127.0.0.1:5000 --timeout 120 app:app
 
 # Calculation: (2 x CPU cores) + 1 for I/O bound
 # Or 4 workers per 1GB RAM for memory-intensive apps

@@ -86,10 +86,10 @@ After=network.target
 [Service]
 Type=notify
 User=root
-WorkingDirectory=/opt/fixjeict
-Environment="PATH=/opt/fixjeict/venv/bin"
-EnvironmentFile=/opt/fixjeict/.env
-ExecStart=/opt/fixjeict/venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 --log-level info app:app
+WorkingDirectory=/opt/fixjeictv2
+Environment="PATH=/opt/fixjeictv2/venv/bin"
+EnvironmentFile=/opt/fixjeictv2/.env
+ExecStart=/opt/fixjeictv2/venv/bin/gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 --log-level info app:app
 Restart=always
 RestartSec=10
 
@@ -110,10 +110,10 @@ After=network.target
 [Service]
 Type=notify
 User=root
-WorkingDirectory=/opt/fixjeict
-Environment="PATH=/opt/fixjeict/venv/bin"
-EnvironmentFile=/opt/fixjeict/.env
-ExecStart=/opt/fixjeict/venv/bin/gunicorn -w 2 -b 0.0.0.0:5001 --timeout 120 --log-level info admin_app:admin_app
+WorkingDirectory=/opt/fixjeictv2
+Environment="PATH=/opt/fixjeictv2/venv/bin"
+EnvironmentFile=/opt/fixjeictv2/.env
+ExecStart=/opt/fixjeictv2/venv/bin/gunicorn -w 2 -b 0.0.0.0:5001 --timeout 120 --log-level info admin_app:admin_app
 Restart=always
 RestartSec=10
 
@@ -204,10 +204,10 @@ Automated backups are scheduled daily via cron (2 AM):
 
 ```bash
 # Manual backup
-/opt/fixjeict/scripts/backup.sh
+/opt/fixjeictv2/scripts/backup.sh
 
 # Backup location
-/var/backups/fixjeict/
+/var/backups/fixjeictv2/
 ```
 
 ### Restore
@@ -217,7 +217,7 @@ Automated backups are scheduled daily via cron (2 AM):
 sudo systemctl stop fixjeict fixjeict-admin
 
 # Restore database
-cp /var/backups/fixjeict/fixjeict_YYYYMMDD_HHMMSS.db /opt/fixjeict/fixjeict.db
+cp /var/backups/fixjeictv2/fixjeict_YYYYMMDD_HHMMSS.db /opt/fixjeictv2/fixjeict.db
 
 # Start services
 sudo systemctl start fixjeict fixjeict-admin

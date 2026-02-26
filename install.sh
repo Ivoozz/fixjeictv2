@@ -44,7 +44,7 @@ fi
 print_header "FixJeICT v2 Installer"
 
 # Get installation directory
-INSTALL_DIR=${INSTALL_DIR:-/opt/fixjeict}
+INSTALL_DIR=${INSTALL_DIR:-/opt/fixjeictv2}
 print_info "Installation directory: $INSTALL_DIR"
 
 # Create installation directory
@@ -147,6 +147,12 @@ pip install -r requirements.txt
 
 print_success "Dependencies installed"
 
+# Update hardcoded paths in scripts
+print_info "Updating hardcoded paths in scripts..."
+find "$INSTALL_DIR" -type f -name "*.sh" -exec sed -i "s|/opt/fixjeict|$INSTALL_DIR|g" {} \;
+find "$INSTALL_DIR" -type f -name "*.sh" -exec sed -i "s|/var/backups/fixjeict|/var/backups/fixjeictv2|g" {} \;
+print_success "Paths updated in scripts"
+
 # Initialize database
 print_info "Initializing database..."
 export FLASK_APP=app.py
@@ -236,31 +242,39 @@ if command -v ufw >/dev/null 2>&1; then
     print_warning "Admin port 5001 should be firewalled from public access"
 fi
 
-# Create backup script
-print_info "Creating backup script..."
-cat > $INSTALL_DIR/scripts/backup.sh << 'EOF'
-#!/bin/bash
-BACKUP_DIR="/var/backups/fixjeict"
-DATE=$(date +%Y%m%d_%H%M%S)
-INSTALL_DIR="/opt/fixjeict"
+# Copy and prepare scripts
+print_info "Copying utility scripts..."
 
-mkdir -p "$BACKUP_DIR"
+# Ensure scripts directory exists
+mkdir -p "$INSTALL_DIR/scripts"
 
-# Backup database
-cp "$INSTALL_DIR/fixjeict.db" "$BACKUP_DIR/fixjeict_$DATE.db"
+# Copy backup.sh from fixjeict_app/scripts
+if [ -f "$INSTALL_DIR/fixjeict_app/scripts/backup.sh" ]; then
+    cp "$INSTALL_DIR/fixjeict_app/scripts/backup.sh" "$INSTALL_DIR/scripts/backup.sh"
+    chmod +x "$INSTALL_DIR/scripts/backup.sh"
+    print_success "Backup script copied"
+else
+    print_warning "backup.sh not found in fixjeict_app/scripts"
+fi
 
-# Keep only last 30 backups
-ls -t "$BACKUP_DIR"/fixjeict_*.db | tail -n +31 | xargs -r rm
+# Copy health-check.sh from fixjeict_app/scripts
+if [ -f "$INSTALL_DIR/fixjeict_app/scripts/health-check.sh" ]; then
+    cp "$INSTALL_DIR/fixjeict_app/scripts/health-check.sh" "$INSTALL_DIR/scripts/health-check.sh"
+    chmod +x "$INSTALL_DIR/scripts/health-check.sh"
+    print_success "Health check script copied"
+else
+    print_warning "health-check.sh not found in fixjeict_app/scripts"
+fi
 
-echo "Backup completed: $BACKUP_DIR/fixjeict_$DATE.db"
-EOF
+# Ensure start.sh, stop.sh, restart.sh have execute permissions
+chmod +x "$INSTALL_DIR/scripts/start.sh" 2>/dev/null || true
+chmod +x "$INSTALL_DIR/scripts/stop.sh" 2>/dev/null || true
+chmod +x "$INSTALL_DIR/scripts/restart.sh" 2>/dev/null || true
 
-chmod +x $INSTALL_DIR/scripts/backup.sh
-
-print_success "Backup script created"
+print_success "Utility scripts prepared"
 
 # Add cron job for daily backups
-(crontab -l 2>/dev/null | grep -v "fixjeict/scripts/backup.sh"; echo "0 2 * * * $INSTALL_DIR/scripts/backup.sh >> /var/log/fixjeict-backup.log 2>&1") | crontab -
+(crontab -l 2>/dev/null | grep -v "fixjeict/scripts/backup.sh"; echo "0 2 * * * $INSTALL_DIR/scripts/backup.sh >> /var/log/fixjeictv2-backup.log 2>&1") | crontab -
 
 print_success "Daily backup scheduled (2 AM)"
 

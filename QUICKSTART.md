@@ -103,20 +103,20 @@ sudo journalctl -u fixjeict -f
 
 ```bash
 # Manual backup
-/opt/fixjeict/scripts/backup.sh
+/opt/fixjeictv2/scripts/backup.sh
 
 # Check database size
-ls -lh /opt/fixjeict/fixjeict.db
+ls -lh /opt/fixjeictv2/fixjeict.db
 
 # View backups
-ls -lh /var/backups/fixjeict/
+ls -lh /var/backups/fixjeictv2/
 ```
 
 ### Health Check
 
 ```bash
 # Run health check
-/opt/fixjeict/scripts/health-check.sh
+/opt/fixjeictv2/scripts/health-check.sh
 
 # Check if services respond
 curl http://localhost:5000/
@@ -167,8 +167,8 @@ sudo kill -9 <PID>
 ## Configuration Files
 
 ### Main Configuration
-- **Location**: `/opt/fixjeict/.env`
-- **Edit**: `sudo nano /opt/fixjeict/.env`
+- **Location**: `/opt/fixjeictv2/.env`
+- **Edit**: `sudo nano /opt/fixjeictv2/.env`
 - **After changes**: `sudo systemctl restart fixjeict fixjeict-admin`
 
 ### Systemd Services

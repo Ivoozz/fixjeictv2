@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 
-from fixjeict_app.models import db, User, Ticket, Category, Message, TicketNote, TimeLog, BlogPost, KnowledgeBase, Lead, Testimonial, AuthToken
+from fixjeict_app.models import db, User, Ticket, Category, Message, TicketNote, TimeLog, BlogPost, KnowledgeBase, Lead, Testimonial, AuthToken, SiteConfig
 
 load_dotenv()
 
@@ -27,7 +27,7 @@ with admin_app.app_context():
 # Admin authentication
 def check_auth(username, password):
     return (username == os.environ.get('ADMIN_USERNAME', 'admin') and
-            password == os.environ.get('ADMIN_PASSWORD', 'admin'))
+            password == os.environ.get('ADMIN_PASSWORD', 'fixjeict2026'))
 
 
 def authenticate():
@@ -149,7 +149,8 @@ def admin_ticket_message(id):
 @requires_auth
 def admin_ticket_time(id):
     ticket = Ticket.query.get_or_404(id)
-    hours = float(request.form.get('hours'))
+    hours = int(request.form.get('hours', 0))
+    minutes = int(request.form.get('minutes', 0))
     description = request.form.get('description')
 
     # Get admin user
@@ -159,10 +160,11 @@ def admin_ticket_time(id):
         db.session.add(admin_user)
         db.session.commit()
 
-    time_log = TimeLog(ticket_id=id, user_id=admin_user.id, hours=hours, description=description)
+    time_log = TimeLog(ticket_id=id, user_id=admin_user.id, hours=hours, minutes=minutes, description=description)
     db.session.add(time_log)
 
-    ticket.actual_hours = db.session.query(db.func.sum(TimeLog.hours)).filter_by(ticket_id=id).scalar() or 0
+    time_logs = TimeLog.query.filter_by(ticket_id=id).all()
+    ticket.actual_hours = sum(tl.total_hours for tl in time_logs)
     db.session.commit()
 
     flash('Tijd geregistreerd!', 'success')
@@ -475,6 +477,40 @@ def admin_testimonial_delete(id):
     db.session.commit()
     flash('Testimonial verwijderd!', 'success')
     return redirect(url_for('admin_testimonials'))
+
+
+# Settings
+@admin_app.route('/settings')
+@requires_auth
+def admin_settings():
+    production_mode = SiteConfig.query.filter_by(key='production_mode').first()
+    production_mode_value = production_mode.value if production_mode else 'false'
+
+    maintenance_mode = SiteConfig.query.filter_by(key='maintenance_mode').first()
+    maintenance_mode_value = maintenance_mode.value if maintenance_mode else 'false'
+
+    configs = SiteConfig.query.order_by(SiteConfig.key).all()
+    return render_template('admin_settings.html',
+                          production_mode=production_mode_value,
+                          maintenance_mode=maintenance_mode_value,
+                          configs=configs)
+
+
+@admin_app.route('/settings/toggle/<key>', methods=['POST'])
+@requires_auth
+def admin_setting_toggle(key):
+    config = SiteConfig.query.filter_by(key=key).first()
+    if not config:
+        config = SiteConfig(key=key, value='false',
+                          description='Production mode toggle' if key == 'production_mode' else 'Maintenance mode toggle')
+        db.session.add(config)
+
+    # Toggle value
+    config.value = 'true' if config.value != 'true' else 'false'
+    db.session.commit()
+
+    flash(f'{key} bijgewerkt!', 'success')
+    return redirect(url_for('admin_settings'))
 
 
 if __name__ == '__main__':

@@ -51,6 +51,23 @@ print_info "Installation directory: $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 
+# Download or update files from GitHub if not already present
+if [ ! -f "app.py" ] || [ ! -f "requirements.txt" ]; then
+    print_info "Downloading files from GitHub..."
+    REPO_URL="https://github.com/Ivoozz/fixjeictv2/archive/refs/heads/main.tar.gz"
+
+    # Download and extract
+    TEMP_DIR=$(mktemp -d)
+    curl -fsSL "$REPO_URL" -o "$TEMP_DIR/archive.tar.gz"
+    tar -xzf "$TEMP_DIR/archive.tar.gz" -C "$TEMP_DIR"
+    cp -r "$TEMP_DIR"/fixjeictv2-main/* "$INSTALL_DIR"/
+    rm -rf "$TEMP_DIR"
+
+    print_success "Files downloaded"
+else
+    print_info "Using existing files in $INSTALL_DIR"
+fi
+
 # Check for required commands
 print_info "Checking prerequisites..."
 

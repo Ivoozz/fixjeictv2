@@ -16,7 +16,8 @@ class User(db.Model):
     last_login = db.Column(db.DateTime)
 
     # Relationships
-    tickets = db.relationship('Ticket', backref='client', lazy=True)
+    tickets = db.relationship('Ticket', backref='client', lazy=True, foreign_keys='Ticket.client_id')
+    fixed_tickets = db.relationship('Ticket', backref='fixer', lazy=True, foreign_keys='Ticket.fixer_id')
     time_logs = db.relationship('TimeLog', backref='user', lazy=True)
 
     def set_password(self, password):
@@ -87,9 +88,15 @@ class TimeLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    hours = db.Column(db.Float, nullable=False)
+    hours = db.Column(db.Integer, default=0)
+    minutes = db.Column(db.Integer, default=0)
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    @property
+    def total_hours(self):
+        """Calculate total hours including minutes"""
+        return self.hours + (self.minutes / 60)
 
 
 class BlogPost(db.Model):
@@ -148,3 +155,11 @@ class AuthToken(db.Model):
 
     # Relationships
     user = db.relationship('User', backref='auth_tokens')
+
+
+class SiteConfig(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    value = db.Column(db.Text)
+    description = db.Column(db.String(200))
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

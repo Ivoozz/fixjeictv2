@@ -138,7 +138,10 @@
                 {% for log in time_logs %}
                 <div class="time-log-entry">
                     <div class="time-log-user">{{ log.user.name }}</div>
-                    <div class="time-log-time">{{ log.hours }}h</div>
+                    <div class="time-log-time">
+                        {% if log.hours %}{{ log.hours }}u{% endif %}
+                        {% if log.minutes %} {{ log.minutes }}m{% endif %}
+                    </div>
                     <div class="time-log-desc">{{ log.description or '-' }}</div>
                     <div class="time-log-date">{{ log.created_at.strftime('%d-%m-%Y') }}</div>
                 </div>
@@ -147,7 +150,8 @@
                 {% if session.user_role in ['fixer', 'admin'] %}
                 <form method="POST" action="{{ url_for('log_time', id=ticket.id) }}" class="time-log-form">
                     <div class="form-row">
-                        <input type="number" name="hours" step="0.25" min="0.25" placeholder="Uren" required>
+                        <input type="number" name="hours" min="0" placeholder="Uren" value="0">
+                        <input type="number" name="minutes" min="0" max="59" placeholder="Minuten" value="0">
                         <input type="text" name="description" placeholder="Beschrijving (optioneel)">
                         <button type="submit" class="btn btn-sm btn-primary">+ Tijd</button>
                     </div>

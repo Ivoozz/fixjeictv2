@@ -16,12 +16,17 @@ admin_app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sq
 admin_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Enable ProxyFix for correct client IPs behind Cloudflare/nginx
-admin_app.wsgi_app = ProxyFix(admin_app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+# x_for=2 for Cloudflare tunnels (Cloudflare adds one X-Forwarded-For header)
+admin_app.wsgi_app = ProxyFix(admin_app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_prefix=1)
 
 db.init_app(admin_app)
 
 with admin_app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception:
+        # Tables might already exist, that's OK
+        pass
 
 
 # Admin authentication

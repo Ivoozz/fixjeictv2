@@ -2,6 +2,7 @@
 
 # FixJeICT v2 - Installer
 # Installs the complete FixJeICT platform to /opt/fixjeictv2
+# One-line installer: bash <(curl -fsSL https://raw.githubusercontent.com/Ivoozz/fixjeictv2/main/install.sh)
 
 set -e
 
@@ -41,7 +42,9 @@ fi
 print_header "FixJeICT v2 Installer"
 
 INSTALL_DIR="/opt/fixjeictv2"
-REPO_URL="https://github.com/Ivoozz/fixjeictv2.git"
+REPO_OWNER="Ivoozz"
+REPO_NAME="fixjeictv2"
+ARCHIVE_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/main.tar.gz"
 
 print_info "Installation directory: $INSTALL_DIR"
 
@@ -51,33 +54,46 @@ print_info "Checking prerequisites..."
 command -v python3 >/dev/null 2>&1 || { print_error "Python 3 is required but not installed. Aborting."; exit 1; }
 command -v pip3 >/dev/null 2>&1 || { print_error "pip3 is required but not installed. Aborting."; exit 1; }
 
-if ! command -v git >/dev/null 2>&1; then
-    print_info "Installing git..."
-    apt-get install -y git >/dev/null 2>&1 || { print_error "Failed to install git. Aborting."; exit 1; }
+if ! command -v curl >/dev/null 2>&1; then
+    print_info "Installing curl..."
+    apt-get update >/dev/null 2>&1
+    apt-get install -y curl >/dev/null 2>&1 || { print_error "Failed to install curl. Aborting."; exit 1; }
 fi
 
 print_success "Prerequisites OK"
 
-# Clone or update repository
-if [ -d "$INSTALL_DIR/.git" ]; then
-    print_info "Updating existing installation..."
-    cd "$INSTALL_DIR"
-    git pull origin main
-    print_success "Repository updated"
-elif [ -d "$INSTALL_DIR" ] && [ "$(ls -A "$INSTALL_DIR")" ]; then
+# Download and extract repository
+if [ -d "$INSTALL_DIR" ] && [ "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]; then
     print_warning "$INSTALL_DIR exists and is not empty"
     read -p "Remove existing directory and reinstall? [y/N]: " CONFIRM_REMOVE
     if [[ $CONFIRM_REMOVE =~ ^[Yy]$ ]]; then
         rm -rf "$INSTALL_DIR"
-        git clone "$REPO_URL" "$INSTALL_DIR"
-        print_success "Repository cloned"
+        INSTALL_FRESH=true
     else
         print_info "Using existing files in $INSTALL_DIR"
+        INSTALL_FRESH=false
     fi
 else
-    print_info "Cloning repository..."
-    git clone "$REPO_URL" "$INSTALL_DIR"
-    print_success "Repository cloned"
+    INSTALL_FRESH=true
+fi
+
+if [ "$INSTALL_FRESH" = true ]; then
+    print_info "Downloading FixJeICT v2..."
+    mkdir -p "$INSTALL_DIR"
+    TMP_DIR=$(mktemp -d)
+    curl -fsSL "$ARCHIVE_URL" -o "$TMP_DIR/fixjeictv2.tar.gz" || { print_error "Failed to download archive. Aborting."; exit 1; }
+    
+    print_info "Extracting archive..."
+    tar -xzf "$TMP_DIR/fixjeictv2.tar.gz" -C "$TMP_DIR" || { print_error "Failed to extract archive. Aborting."; exit 1; }
+    
+    # Move extracted files to install directory
+    mv "$TMP_DIR/${REPO_NAME}-main/"* "$INSTALL_DIR/" 2>/dev/null || true
+    mv "$TMP_DIR/${REPO_NAME}-main/".[^.]* "$INSTALL_DIR/" 2>/dev/null || true
+    
+    # Cleanup
+    rm -rf "$TMP_DIR"
+    
+    print_success "FixJeICT v2 downloaded and extracted"
 fi
 
 cd "$INSTALL_DIR"

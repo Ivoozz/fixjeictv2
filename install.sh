@@ -151,6 +151,11 @@ print_success "Dependencies installed"
 print_info "Updating hardcoded paths in scripts..."
 find "$INSTALL_DIR" -type f -name "*.sh" -exec sed -i "s|/opt/fixjeict|$INSTALL_DIR|g" {} \;
 find "$INSTALL_DIR" -type f -name "*.sh" -exec sed -i "s|/var/backups/fixjeict|/var/backups/fixjeictv2|g" {} \;
+
+# Ensure all scripts are executable
+chmod +x "$INSTALL_DIR/scripts/"*.sh 2>/dev/null || true
+chmod +x "$INSTALL_DIR/fixjeict_app/scripts/"*.sh 2>/dev/null || true
+
 print_success "Paths updated in scripts"
 
 # Initialize database
@@ -231,7 +236,23 @@ if [[ $ENABLE_SERVICES =~ ^[Yy]$ ]]; then
     systemctl enable fixjeict-admin.service
     systemctl start fixjeict.service
     systemctl start fixjeict-admin.service
-    print_success "Services started"
+
+    # Wait for services to start
+    print_info "Waiting for services to start..."
+    sleep 3
+
+    # Verify services are running
+    if systemctl is-active --quiet fixjeict.service; then
+        print_success "Main app service (fixjeict) is running on port 5000"
+    else
+        print_error "Main app service failed to start. Check: journalctl -u fixjeict -n 50"
+    fi
+
+    if systemctl is-active --quiet fixjeict-admin.service; then
+        print_success "Admin portal service (fixjeict-admin) is running on port 5001"
+    else
+        print_error "Admin portal service failed to start. Check: journalctl -u fixjeict-admin -n 50"
+    fi
 fi
 
 # Firewall configuration
@@ -248,28 +269,23 @@ print_info "Copying utility scripts..."
 # Ensure scripts directory exists
 mkdir -p "$INSTALL_DIR/scripts"
 
-# Copy backup.sh from fixjeict_app/scripts
-if [ -f "$INSTALL_DIR/fixjeict_app/scripts/backup.sh" ]; then
-    cp "$INSTALL_DIR/fixjeict_app/scripts/backup.sh" "$INSTALL_DIR/scripts/backup.sh"
-    chmod +x "$INSTALL_DIR/scripts/backup.sh"
-    print_success "Backup script copied"
-else
-    print_warning "backup.sh not found in fixjeict_app/scripts"
-fi
+# Copy utility scripts from fixjeict_app/scripts to main scripts folder
+for script in backup.sh health-check.sh; do
+    if [ -f "$INSTALL_DIR/fixjeict_app/scripts/$script" ]; then
+        cp "$INSTALL_DIR/fixjeict_app/scripts/$script" "$INSTALL_DIR/scripts/$script"
+        chmod +x "$INSTALL_DIR/scripts/$script"
+        print_success "$script copied"
+    else
+        print_warning "$script not found in fixjeict_app/scripts"
+    fi
+done
 
-# Copy health-check.sh from fixjeict_app/scripts
-if [ -f "$INSTALL_DIR/fixjeict_app/scripts/health-check.sh" ]; then
-    cp "$INSTALL_DIR/fixjeict_app/scripts/health-check.sh" "$INSTALL_DIR/scripts/health-check.sh"
-    chmod +x "$INSTALL_DIR/scripts/health-check.sh"
-    print_success "Health check script copied"
-else
-    print_warning "health-check.sh not found in fixjeict_app/scripts"
-fi
-
-# Ensure start.sh, stop.sh, restart.sh have execute permissions
-chmod +x "$INSTALL_DIR/scripts/start.sh" 2>/dev/null || true
-chmod +x "$INSTALL_DIR/scripts/stop.sh" 2>/dev/null || true
-chmod +x "$INSTALL_DIR/scripts/restart.sh" 2>/dev/null || true
+# Ensure all utility scripts have execute permissions
+for script in start.sh stop.sh restart.sh backup.sh health-check.sh; do
+    if [ -f "$INSTALL_DIR/scripts/$script" ]; then
+        chmod +x "$INSTALL_DIR/scripts/$script"
+    fi
+done
 
 print_success "Utility scripts prepared"
 
@@ -284,19 +300,25 @@ print_header "Installation Complete!"
 echo -e "${GREEN}✓ FixJeICT v2 installed successfully!${NC}\n"
 
 echo "Installation Directory: $INSTALL_DIR"
-echo "Main App Port: 5000"
-echo "Admin Portal Port: 5001"
+echo "Main App: http://0.0.0.0:5000"
+echo "Admin Portal: http://0.0.0.0:5001"
 echo ""
 echo "Services:"
-echo "  - fixjeict.service (main app)"
-echo "  - fixjeict-admin.service (admin portal)"
+echo "  - fixjeict.service (main app on port 5000)"
+echo "  - fixjeict-admin.service (admin portal on port 5001)"
+echo ""
+echo "Utility Scripts:"
+echo "  - Start:    $INSTALL_DIR/scripts/start.sh"
+echo "  - Stop:     $INSTALL_DIR/scripts/stop.sh"
+echo "  - Restart:  $INSTALL_DIR/scripts/restart.sh"
+echo "  - Backup:   $INSTALL_DIR/scripts/backup.sh"
+echo "  - Health:   $INSTALL_DIR/scripts/health-check.sh"
 echo ""
 echo "Useful Commands:"
 echo "  - Start services:   systemctl start fixjeict fixjeict-admin"
 echo "  - Stop services:    systemctl stop fixjeict fixjeict-admin"
 echo "  - Restart services: systemctl restart fixjeict fixjeict-admin"
 echo "  - View logs:        journalctl -u fixjeict -f"
-echo "  - Run backup:       $INSTALL_DIR/scripts/backup.sh"
 echo ""
 echo "Next Steps:"
 echo "1. Configure DNS/Cloudflare to point to your server"
@@ -305,7 +327,7 @@ echo "3. Configure MX records for email routing"
 echo "4. Verify Resend domain (if using email)"
 echo ""
 print_warning "Remember to firewall port 5001 from public access!"
-print_warning "Change your admin password regularly."
+print_warning "Default admin credentials: $ADMIN_USERNAME / [your password]"
 echo ""
 
 read -p "Press Enter to exit..."

@@ -22,19 +22,24 @@ wheels/
 
 # Virtual Environment
 venv/
-ENV/
 env/
-.venv
+ENV/
+.venv/
 
 # Environment Variables
 .env
 .env.local
-.env.*.local
+.env.production
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
+data/
+
+# Logs
+logs/
+*.log
 
 # IDE
 .vscode/
@@ -47,21 +52,6 @@ env/
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-logs/
-
 # Backups
-backups/
-*.backup
-
-# Static files (should be in the repo but ignore if user adds custom stuff)
-static/images/custom/
-
-# Systemd
-/etc/systemd/system/fixjeict*.service
-
-# Temporary files
-tmp/
-temp/
-*.tmp
+*.backup.*
+*.bak

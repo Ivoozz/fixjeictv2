@@ -9,6 +9,9 @@ BACKUP_DIR="/var/backups/fixjeictv2"
 DB_NAME="fixjeict.db"
 RETENTION_DAYS=30
 
+# Database location (new v3 structure uses data directory)
+DB_PATH="$INSTALL_DIR/data/$DB_NAME"
+
 # Create backup directory if it doesn't exist
 mkdir -p "$BACKUP_DIR"
 
@@ -24,14 +27,18 @@ echo "Started at: $(date)"
 echo
 
 # Check if database exists
-if [ ! -f "$INSTALL_DIR/$DB_NAME" ]; then
-    echo "ERROR: Database not found at $INSTALL_DIR/$DB_NAME"
-    exit 1
+if [ ! -f "$DB_PATH" ]; then
+    # Fall back to old location
+    DB_PATH="$INSTALL_DIR/$DB_NAME"
+    if [ ! -f "$DB_PATH" ]; then
+        echo "ERROR: Database not found at $INSTALL_DIR/data/$DB_NAME or $INSTALL_DIR/$DB_NAME"
+        exit 1
+    fi
 fi
 
 # Perform backup
-echo "Copying database..."
-cp "$INSTALL_DIR/$DB_NAME" "$BACKUP_FILE"
+echo "Copying database from $DB_PATH..."
+cp "$DB_PATH" "$BACKUP_FILE"
 
 if [ $? -eq 0 ]; then
     # Get backup size

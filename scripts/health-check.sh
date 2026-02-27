@@ -44,7 +44,7 @@ echo
 echo "Checking HTTP endpoints..."
 
 if [ "$MAIN_SERVICE" = true ]; then
-    MAIN_HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$MAIN_URL" --max-time 5 || echo "000")
+    MAIN_HTTP=$(curl -s -o /dev/null -w "%{http_code}" "${MAIN_URL}/health" --max-time 5 || echo "000")
     if [ "$MAIN_HTTP" = "200" ]; then
         echo -e "${GREEN}✓${NC} Main app responding (HTTP $MAIN_HTTP)"
     else
@@ -55,8 +55,8 @@ else
 fi
 
 if [ "$ADMIN_SERVICE" = true ]; then
-    ADMIN_HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$ADMIN_URL" --max-time 5 || echo "000")
-    if [ "$ADMIN_HTTP" = "401" ] || [ "$ADMIN_HTTP" = "200" ]; then
+    ADMIN_HTTP=$(curl -s -o /dev/null -w "%{http_code}" "${ADMIN_URL}/admin/health" --max-time 5 || echo "000")
+    if [ "$ADMIN_HTTP" = "200" ]; then
         echo -e "${GREEN}✓${NC} Admin portal responding (HTTP $ADMIN_HTTP)"
     else
         echo -e "${RED}✗${NC} Admin portal not responding (HTTP $ADMIN_HTTP)"
@@ -69,7 +69,12 @@ echo
 
 # Check database
 echo "Checking database..."
-DB_PATH="/opt/fixjeictv2/fixjeict.db"
+DB_PATH="/opt/fixjeictv2/data/fixjeict.db"
+
+if [ ! -f "$DB_PATH" ]; then
+    # Fall back to old location
+    DB_PATH="/opt/fixjeictv2/fixjeict.db"
+fi
 
 if [ -f "$DB_PATH" ]; then
     DB_SIZE=$(du -h "$DB_PATH" | cut -f1)

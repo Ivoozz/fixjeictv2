@@ -1,10 +1,8 @@
-# FixJeICT Application Package
-from .models import db, User, Ticket, Category, Message, TicketNote, TimeLog, BlogPost, KnowledgeBase, Lead, Testimonial, AuthToken, SiteConfig
-from .email_service import email_service
-from .cloudflare_service import cloudflare_service
+"""
+FixJeICT v3 - FastAPI-based IT Support Platform
 
-__all__ = [
-    'db', 'User', 'Ticket', 'Category', 'Message', 'TicketNote', 'TimeLog',
-    'BlogPost', 'KnowledgeBase', 'Lead', 'Testimonial', 'AuthToken', 'SiteConfig',
-    'email_service', 'cloudflare_service'
-]
+Main application package containing models, routers, services, and utilities.
+"""
+
+__version__ = "3.0.0"
+__author__ = "FixJeICT"

@@ -1,165 +1,236 @@
 from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
+from typing import Optional
 
-db = SQLAlchemy()
+from sqlalchemy import (
+    Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text,
+    UniqueConstraint
+)
+from sqlalchemy.orm import relationship
 
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    name = db.Column(db.String(100), nullable=False)
-    company = db.Column(db.String(100))
-    role = db.Column(db.String(20), default='client')
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login = db.Column(db.DateTime)
-
-    # Relationships
-    tickets = db.relationship('Ticket', backref='client', lazy=True, foreign_keys='Ticket.client_id')
-    fixed_tickets = db.relationship('Ticket', backref='fixer', lazy=True, foreign_keys='Ticket.fixer_id')
-    time_logs = db.relationship('TimeLog', backref='user', lazy=True)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+from .database import Base
 
 
-class Category(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)
-    description = db.Column(db.String(200))
-    icon = db.Column(db.String(50))
-    order = db.Column(db.Integer, default=0)
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(120), unique=True, nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    company = Column(String(100))
+    role = Column(String(20), default="client")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login = Column(DateTime)
 
     # Relationships
-    tickets = db.relationship('Ticket', backref='category', lazy=True)
+    tickets = relationship("Ticket", back_populates="client", foreign_keys="Ticket.client_id")
+    fixed_tickets = relationship("Ticket", back_populates="fixer", foreign_keys="Ticket.fixer_id")
+    messages = relationship("Message", back_populates="user")
+    ticket_notes = relationship("TicketNote", back_populates="user")
+    time_logs = relationship("TimeLog", back_populates="user")
+    auth_tokens = relationship("AuthToken", back_populates="user")
+
+    def __repr__(self) -> str:
+        return f"<User(id={self.id}, email={self.email}, role={self.role})>"
 
 
-class Ticket(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(50), default='Open')
-    priority = db.Column(db.String(20), default='normaal')
-    client_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
-    fixer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    estimated_hours = db.Column(db.Float)
-    actual_hours = db.Column(db.Float, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    closed_at = db.Column(db.DateTime)
+class Category(Base):
+    __tablename__ = "categories"
 
-    # Relationships
-    messages = db.relationship('Message', backref='ticket', lazy=True, cascade='all, delete-orphan')
-    notes = db.relationship('TicketNote', backref='ticket', lazy=True, cascade='all, delete-orphan')
-    time_logs = db.relationship('TimeLog', backref='ticket', lazy=True, cascade='all, delete-orphan')
-
-
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    is_internal = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), unique=True, nullable=False)
+    description = Column(String(200))
+    icon = Column(String(50))
+    order = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    user = db.relationship('User', backref='messages')
+    tickets = relationship("Ticket", back_populates="category")
+
+    def __repr__(self) -> str:
+        return f"<Category(id={self.id}, name={self.name})>"
 
 
-class TicketNote(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+class Ticket(Base):
+    __tablename__ = "tickets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)
+    status = Column(String(50), default="Open")
+    priority = Column(String(20), default="normaal")
+    client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"))
+    fixer_id = Column(Integer, ForeignKey("users.id"))
+    estimated_hours = Column(Float)
+    actual_hours = Column(Float, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    closed_at = Column(DateTime)
 
     # Relationships
-    user = db.relationship('User', backref='ticket_notes')
+    client = relationship("User", back_populates="tickets", foreign_keys=[client_id])
+    fixer = relationship("User", back_populates="fixed_tickets", foreign_keys=[fixer_id])
+    category = relationship("Category", back_populates="tickets")
+    messages = relationship("Message", back_populates="ticket", cascade="all, delete-orphan")
+    notes = relationship("TicketNote", back_populates="ticket", cascade="all, delete-orphan")
+    time_logs = relationship("TimeLog", back_populates="ticket", cascade="all, delete-orphan")
+
+    def __repr__(self) -> str:
+        return f"<Ticket(id={self.id}, title={self.title}, status={self.status})>"
 
 
-class TimeLog(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    hours = db.Column(db.Integer, default=0)
-    minutes = db.Column(db.Integer, default=0)
-    description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+class Message(Base):
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True)
+    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    is_internal = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    ticket = relationship("Ticket", back_populates="messages")
+    user = relationship("User", back_populates="messages")
+
+    def __repr__(self) -> str:
+        return f"<Message(id={self.id}, ticket_id={self.ticket_id})>"
+
+
+class TicketNote(Base):
+    __tablename__ = "ticket_notes"
+
+    id = Column(Integer, primary_key=True)
+    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    ticket = relationship("Ticket", back_populates="notes")
+    user = relationship("User", back_populates="ticket_notes")
+
+    def __repr__(self) -> str:
+        return f"<TicketNote(id={self.id}, ticket_id={self.ticket_id})>"
+
+
+class TimeLog(Base):
+    __tablename__ = "time_logs"
+
+    id = Column(Integer, primary_key=True)
+    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    hours = Column(Integer, default=0)
+    minutes = Column(Integer, default=0)
+    description = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    # Relationships
+    ticket = relationship("Ticket", back_populates="time_logs")
+    user = relationship("User", back_populates="time_logs")
 
     @property
-    def total_hours(self):
+    def total_hours(self) -> float:
         """Calculate total hours including minutes"""
         return self.hours + (self.minutes / 60)
 
-
-class BlogPost(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    slug = db.Column(db.String(200), unique=True, nullable=False, index=True)
-    content = db.Column(db.Text, nullable=False)
-    excerpt = db.Column(db.String(300))
-    image_url = db.Column(db.String(500))
-    is_published = db.Column(db.Boolean, default=False)
-    published_at = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    def __repr__(self) -> str:
+        return f"<TimeLog(id={self.id}, ticket_id={self.ticket_id}, hours={self.total_hours})>"
 
 
-class KnowledgeBase(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    slug = db.Column(db.String(200), unique=True, nullable=False, index=True)
-    content = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(50))
-    views = db.Column(db.Integer, default=0)
-    is_published = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+class BlogPost(Base):
+    __tablename__ = "blog_posts"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String(200), nullable=False)
+    slug = Column(String(200), unique=True, nullable=False, index=True)
+    content = Column(Text, nullable=False)
+    excerpt = Column(String(300))
+    image_url = Column(String(500))
+    is_published = Column(Boolean, default=False)
+    published_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self) -> str:
+        return f"<BlogPost(id={self.id}, title={self.title}, published={self.is_published})>"
 
 
-class Lead(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    company = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
-    message = db.Column(db.Text)
-    status = db.Column(db.String(20), default='new')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+class KnowledgeBase(Base):
+    __tablename__ = "knowledge_base"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String(200), nullable=False)
+    slug = Column(String(200), unique=True, nullable=False, index=True)
+    content = Column(Text, nullable=False)
+    category = Column(String(50))
+    views = Column(Integer, default=0)
+    is_published = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self) -> str:
+        return f"<KnowledgeBase(id={self.id}, title={self.title}, published={self.is_published})>"
 
 
-class Testimonial(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    company = db.Column(db.String(100))
-    content = db.Column(db.Text, nullable=False)
-    rating = db.Column(db.Integer)
-    is_published = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+class Lead(Base):
+    __tablename__ = "leads"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    email = Column(String(120), nullable=False)
+    company = Column(String(100))
+    phone = Column(String(20))
+    message = Column(Text)
+    status = Column(String(20), default="new")
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    def __repr__(self) -> str:
+        return f"<Lead(id={self.id}, name={self.name}, email={self.email})>"
 
 
-class AuthToken(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    token = db.Column(db.String(100), unique=True, nullable=False, index=True)
-    expires_at = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    used = db.Column(db.Boolean, default=False)
+class Testimonial(Base):
+    __tablename__ = "testimonials"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    company = Column(String(100))
+    content = Column(Text, nullable=False)
+    rating = Column(Integer)
+    is_published = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def __repr__(self) -> str:
+        return f"<Testimonial(id={self.id}, name={self.name}, rating={self.rating})>"
+
+
+class AuthToken(Base):
+    __tablename__ = "auth_tokens"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token = Column(String(100), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    used = Column(Boolean, default=False)
 
     # Relationships
-    user = db.relationship('User', backref='auth_tokens')
+    user = relationship("User", back_populates="auth_tokens")
+
+    def __repr__(self) -> str:
+        return f"<AuthToken(id={self.id}, user_id={self.user_id}, used={self.used})>"
 
 
-class SiteConfig(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(50), unique=True, nullable=False, index=True)
-    value = db.Column(db.Text)
-    description = db.Column(db.String(200))
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+class SiteConfig(Base):
+    __tablename__ = "site_config"
+
+    id = Column(Integer, primary_key=True)
+    key = Column(String(50), unique=True, nullable=False, index=True)
+    value = Column(Text)
+    description = Column(String(200))
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self) -> str:
+        return f"<SiteConfig(key={self.key}, value={self.value})>"

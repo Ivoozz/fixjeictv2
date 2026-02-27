@@ -1,286 +1,222 @@
+import logging
 import os
+from typing import Optional
+
 import resend
-from datetime import datetime, timedelta
-from flask import current_app
+from sqlalchemy.orm import Session
+
+from .config import settings
+from .models import Lead, Message, Ticket, User
+
+logger = logging.getLogger(__name__)
 
 
 class EmailService:
+    """Email service using Resend API"""
+
     def __init__(self):
-        resend.api_key = os.environ.get('RESEND_API_KEY')
+        resend.api_key = settings.RESEND_API_KEY
 
-    def _is_configured(self):
-        return bool(os.environ.get('RESEND_API_KEY'))
+    def _is_configured(self) -> bool:
+        """Check if email service is properly configured"""
+        return bool(settings.RESEND_API_KEY)
 
-    def send_magic_link(self, email, token, name):
+    def _send_email(self, to_email: str, subject: str, html_content: str) -> Optional[str]:
+        """Send an email and return the message ID"""
         if not self._is_configured():
-            current_app.logger.warning('Resend not configured - skipping magic link email')
+            logger.warning("Resend not configured - skipping email")
             return None
 
-        from_email = os.environ.get('RESEND_FROM', 'noreply@fixjeict.nl')
-        login_url = f"{os.environ.get('APP_URL', 'http://localhost:5000')}/auth/verify/{token}"
+        from_email = settings.RESEND_FROM
 
         params = {
-            'from': from_email,
-            'to': [email],
-            'subject': '🔐 Uw login link voor FixJeICT',
-            'html': self._magic_link_template(name, login_url)
+            "from": from_email,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content,
         }
 
         try:
             result = resend.Emails.send(params)
-            return result.get('id')
+            logger.info(f"Email sent to {to_email}: {result.get('id')}")
+            return result.get("id")
         except Exception as e:
-            current_app.logger.error(f'Failed to send magic link: {e}')
+            logger.error(f"Failed to send email to {to_email}: {e}")
             return None
 
-    def send_ticket_created(self, ticket, client_email):
-        if not self._is_configured():
-            return None
+    def send_magic_link(self, email: str, token: str, name: str) -> Optional[str]:
+        """Send magic link for login"""
+        login_url = f"{settings.APP_URL}/auth/verify/{token}"
 
-        from_email = os.environ.get('RESEND_FROM', 'noreply@fixjeict.nl')
-        ticket_url = f"{os.environ.get('APP_URL', 'http://localhost:5000')}/tickets/{ticket.id}"
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Uw login link voor FixJeICT</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+                <h1 style="color: white; margin: 0;">🔐 FixJeICT</h1>
+            </div>
+            <div style="padding: 30px; background: #f9f9f9;">
+                <h2>Welkom, {name}!</h2>
+                <p>Klik op de onderstaande knop om in te loggen op uw FixJeICT account:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{login_url}" style="display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Inloggen</a>
+                </div>
+                <p style="font-size: 14px; color: #666;">
+                    Of kopieer deze link naar uw browser:<br>
+                    <a href="{login_url}" style="color: #667eea;">{login_url}</a>
+                </p>
+                <p style="font-size: 12px; color: #999; margin-top: 30px;">
+                    Deze link is 24 uur geldig. Als u niet om deze link heeft gevraagd, kunt u dit bericht negeren.
+                </p>
+            </div>
+        </body>
+        </html>
+        """
 
-        params = {
-            'from': from_email,
-            'to': [client_email],
-            'subject': f'📋 Nieuw ticket #{ticket.id}: {ticket.title}',
-            'html': self._ticket_created_template(ticket, ticket_url)
-        }
+        return self._send_email(email, "🔐 Uw login link voor FixJeICT", html_content)
 
-        try:
-            result = resend.Emails.send(params)
-            return result.get('id')
-        except Exception as e:
-            current_app.logger.error(f'Failed to send ticket email: {e}')
-            return None
+    def send_ticket_created(self, ticket: Ticket, client_email: str) -> Optional[str]:
+        """Send email notification when a ticket is created"""
+        ticket_url = f"{settings.APP_URL}/tickets/{ticket.id}"
 
-    def send_ticket_updated(self, ticket, client_email, status):
-        if not self._is_configured():
-            return None
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Nieuw ticket #{ticket.id}</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+                <h1 style="color: white; margin: 0;">📋 FixJeICT</h1>
+            </div>
+            <div style="padding: 30px; background: #f9f9f9;">
+                <h2>Nieuw ticket aangemaakt</h2>
+                <p>Uw ticket is succesvol aangemaakt:</p>
+                <div style="background: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0;">
+                    <h3 style="margin-top: 0;">#{ticket.id} - {ticket.title}</h3>
+                    <p><strong>Status:</strong> {ticket.status}</p>
+                    <p><strong>Prioriteit:</strong> {ticket.priority}</p>
+                    <p style="margin-bottom: 0;"><strong>Beschrijving:</strong></p>
+                    <p style="white-space: pre-wrap;">{ticket.description}</p>
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{ticket_url}" style="display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Bekijk ticket</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
 
-        from_email = os.environ.get('RESEND_FROM', 'noreply@fixjeict.nl')
-        ticket_url = f"{os.environ.get('APP_URL', 'http://localhost:5000')}/tickets/{ticket.id}"
+        return self._send_email(client_email, f"📋 Nieuw ticket #{ticket.id}: {ticket.title}", html_content)
 
-        params = {
-            'from': from_email,
-            'to': [client_email],
-            'subject': f'🔄 Update ticket #{ticket.id}: {ticket.title}',
-            'html': self._ticket_updated_template(ticket, ticket_url, status)
-        }
+    def send_ticket_updated(self, ticket: Ticket, client_email: str, new_status: str) -> Optional[str]:
+        """Send email notification when ticket status changes"""
+        ticket_url = f"{settings.APP_URL}/tickets/{ticket.id}"
 
-        try:
-            result = resend.Emails.send(params)
-            return result.get('id')
-        except Exception as e:
-            current_app.logger.error(f'Failed to send ticket update email: {e}')
-            return None
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Update ticket #{ticket.id}</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+                <h1 style="color: white; margin: 0;">🔄 FixJeICT</h1>
+            </div>
+            <div style="padding: 30px; status: #f9f9f9;">
+                <h2>Ticket bijgewerkt</h2>
+                <p>De status van uw ticket is gewijzigd:</p>
+                <div style="background: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0;">
+                    <h3 style="margin-top: 0;">#{ticket.id} - {ticket.title}</h3>
+                    <p><strong>Nieuwe status:</strong> {new_status}</p>
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{ticket_url}" style="display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Bekijk ticket</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
 
-    def send_message_notification(self, ticket, message, recipient_email):
-        if not self._is_configured():
-            return None
+        return self._send_email(client_email, f"🔄 Update ticket #{ticket.id}: {ticket.title}", html_content)
 
-        from_email = os.environ.get('RESEND_FROM', 'noreply@fixjeict.nl')
-        ticket_url = f"{os.environ.get('APP_URL', 'http://localhost:5000')}/tickets/{ticket.id}"
+    def send_message_notification(self, ticket: Ticket, message: Message, recipient_email: str) -> Optional[str]:
+        """Send email notification when a new message is posted"""
+        ticket_url = f"{settings.APP_URL}/tickets/{ticket.id}"
+        sender_name = message.user.name if message.user else "FixJeICT"
 
-        params = {
-            'from': from_email,
-            'to': [recipient_email],
-            'subject': f'💬 Nieuw bericht ticket #{ticket.id}: {ticket.title}',
-            'html': self._message_template(ticket, message, ticket_url)
-        }
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Nieuw bericht ticket #{ticket.id}</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+                <h1 style="color: white; margin: 0;">💬 FixJeICT</h1>
+            </div>
+            <div style="padding: 30px; background: #f9f9f9;">
+                <h2>Nieuw bericht</h2>
+                <p>Er is een nieuw bericht geplaatst op uw ticket:</p>
+                <div style="background: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0;">
+                    <h3 style="margin-top: 0;">#{ticket.id} - {ticket.title}</h3>
+                    <p><strong>Van:</strong> {sender_name}</p>
+                    <p style="margin-bottom: 0;"><strong>Bericht:</strong></p>
+                    <p style="white-space: pre-wrap;">{message.content}</p>
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{ticket_url}" style="display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Bekijk ticket</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
 
-        try:
-            result = resend.Emails.send(params)
-            return result.get('id')
-        except Exception as e:
-            current_app.logger.error(f'Failed to send message email: {e}')
-            return None
+        return self._send_email(recipient_email, f"💬 Nieuw bericht ticket #{ticket.id}: {ticket.title}", html_content)
 
-    def send_lead_notification(self, lead):
-        if not self._is_configured():
-            return None
+    def send_lead_notification(self, lead: Lead) -> Optional[str]:
+        """Send email notification for new lead"""
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Nieuwe lead: {lead.name}</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+                <h1 style="color: white; margin: 0;">📧 FixJeICT</h1>
+            </div>
+            <div style="padding: 30px; background: #f9f9f9;">
+                <h2>Nieuwe lead</h2>
+                <div style="background: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0;">
+                    <p><strong>Naam:</strong> {lead.name}</p>
+                    <p><strong>Email:</strong> {lead.email}</p>
+                    <p><strong>Bedrijf:</strong> {lead.company or 'N/A'}</p>
+                    <p><strong>Telefoon:</strong> {lead.phone or 'N/A'}</p>
+                    <p style="margin-bottom: 0;"><strong>Bericht:</strong></p>
+                    <p style="white-space: pre-wrap;">{lead.message or 'Geen bericht'}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
 
-        from_email = os.environ.get('RESEND_FROM', 'noreply@fixjeict.nl')
-
-        params = {
-            'from': from_email,
-            'to': [from_email],
-            'subject': f'🎯 Nieuwe lead van {lead.name}',
-            'html': self._lead_template(lead)
-        }
-
-        try:
-            result = resend.Emails.send(params)
-            return result.get('id')
-        except Exception as e:
-            current_app.logger.error(f'Failed to send lead email: {e}')
-            return None
-
-    def _magic_link_template(self, name, login_url):
-        return f'''
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .button {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 50px; margin-top: 20px; }}
-        .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>🔐 FixJeICT Login</h1>
-    </div>
-    <div class="content">
-        <p>Hoi {name},</p>
-        <p>Klik op de onderstaande knop om in te loggen op uw FixJeICT account:</p>
-        <center><a href="{login_url}" class="button">Inloggen</a></center>
-        <p style="margin-top: 30px; font-size: 14px; color: #666;">
-            Of gebruik deze link:<br>
-            <a href="{login_url}" style="color: #667eea;">{login_url}</a>
-        </p>
-        <p style="margin-top: 20px; font-size: 14px; color: #666;">
-            Deze link is 24 uur geldig.
-        </p>
-    </div>
-    <div class="footer">
-        <p>FixJeICT - Uw ICT partner</p>
-    </div>
-</body>
-</html>
-'''
-
-    def _ticket_created_template(self, ticket, ticket_url):
-        return f'''
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .ticket-info {{ background: white; padding: 20px; border-radius: 8px; margin-top: 20px; }}
-        .label {{ font-weight: bold; color: #667eea; }}
-        .button {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 50px; margin-top: 20px; }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>📋 Nieuw Ticket Aangemaakt</h1>
-    </div>
-    <div class="content">
-        <p>Uw nieuwe ticket is succesvol aangemaakt:</p>
-        <div class="ticket-info">
-            <p><span class="label">Ticket #:</span> {ticket.id}</p>
-            <p><span class="label">Onderwerp:</span> {ticket.title}</p>
-            <p><span class="label">Status:</span> {ticket.status}</p>
-        </div>
-        <center><a href="{ticket_url}" class="button">Bekijk Ticket</a></center>
-        <p style="margin-top: 20px; font-size: 14px; color: #666;">
-            We nemen zo snel mogelijk contact met u op.
-        </p>
-    </div>
-</body>
-</html>
-'''
-
-    def _ticket_updated_template(self, ticket, ticket_url, status):
-        return f'''
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .ticket-info {{ background: white; padding: 20px; border-radius: 8px; margin-top: 20px; }}
-        .status-badge {{ display: inline-block; background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; }}
-        .button {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 50px; margin-top: 20px; }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>🔄 Ticket Update</h1>
-    </div>
-    <div class="content">
-        <p>Uw ticket is bijgewerkt:</p>
-        <div class="ticket-info">
-            <p><span class="label">Ticket #:</span> {ticket.id}</p>
-            <p><span class="label">Onderwerp:</span> {ticket.title}</p>
-            <p><span class="label">Nieuwe status:</span> <span class="status-badge">{status}</span></p>
-        </div>
-        <center><a href="{ticket_url}" class="button">Bekijk Ticket</a></center>
-    </div>
-</body>
-</html>
-'''
-
-    def _message_template(self, ticket, message, ticket_url):
-        return f'''
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .message {{ background: white; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #667eea; }}
-        .button {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 50px; margin-top: 20px; }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>💬 Nieuw Bericht</h1>
-    </div>
-    <div class="content">
-        <p>Er is een nieuw bericht geplaatst op ticket #{ticket.id}:</p>
-        <p><strong>{ticket.title}</strong></p>
-        <div class="message">
-            {message.content.replace(chr(10), '<br>')}
-        </div>
-        <center><a href="{ticket_url}" class="button">Bekijk Ticket</a></center>
-    </div>
-</body>
-</html>
-'''
-
-    def _lead_template(self, lead):
-        return f'''
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-        .lead-info {{ background: white; padding: 20px; border-radius: 8px; margin-top: 20px; }}
-        .label {{ font-weight: bold; color: #667eea; }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>🎯 Nieuwe Lead</h1>
-    </div>
-    <div class="content">
-        <div class="lead-info">
-            <p><span class="label">Naam:</span> {lead.name}</p>
-            <p><span class="label">Email:</span> {lead.email}</p>
-            <p><span class="label">Bedrijf:</span> {lead.company or '-'}</p>
-            <p><span class="label">Telefoon:</span> {lead.phone or '-'}</p>
-            <p><span class="label">Bericht:</span></p>
-            <p>{lead.message or '-'}</p>
-        </div>
-    </div>
-</body>
-</html>
-'''
+        # Send to admin email (using RESEND_FROM as admin email)
+        return self._send_email(settings.RESEND_FROM, f"📧 Nieuwe lead: {lead.name}", html_content)
 
 
+# Global email service instance
 email_service = EmailService()
